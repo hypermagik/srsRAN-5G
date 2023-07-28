@@ -64,8 +64,8 @@ bool prach_detector_validator_impl::is_valid(const prach_detector::configuration
     return false;
   }
 
-  if (config.ra_scs != prach_subcarrier_spacing::kHz30) {
-    // Currently, only PRACH subcarrier spacing of 30 kHz is supported.
+  if (config.ra_scs > prach_subcarrier_spacing::kHz30) {
+    // Currently, only PRACH subcarrier spacing of 15 kHz and 30 kHz are supported.
     return false;
   }
 
