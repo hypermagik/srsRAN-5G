@@ -91,6 +91,7 @@ public:
    * SDU/PDU handlers
    */
   void handle_sdu(byte_buffer sdu) final;
+  byte_buffer handle_pdu(byte_buffer pdu) final;
 
   void handle_transmit_notification(uint32_t highest_sn) override
   {
@@ -194,6 +195,8 @@ private:
   security::sec_128_as_config sec_cfg           = {};
   security::integrity_enabled integrity_enabled = security::integrity_enabled::off;
   security::ciphering_enabled ciphering_enabled = security::ciphering_enabled::off;
+
+  byte_buffer handle_sdu_common(byte_buffer buf);
 
   void write_data_pdu_to_lower_layers(uint32_t count, byte_buffer buf);
   void write_control_pdu_to_lower_layers(byte_buffer buf);

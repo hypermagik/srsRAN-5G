@@ -63,8 +63,24 @@ void ue_context_release_routine::operator()(coro_context<async_task<void>>& ctx)
     // prepare F1AP UE Context Release Command and call F1AP notifier
     f1ap_ue_context_release_cmd.ue_index        = command.ue_index;
     f1ap_ue_context_release_cmd.cause           = command.cause;
-    f1ap_ue_context_release_cmd.rrc_release_pdu = command.rrc_release_pdu.copy();
     f1ap_ue_context_release_cmd.srb_id          = command.srb_id;
+
+    if (!command.rrc_release_pdu.empty()) {
+      optional<srb_id_t> srb_id = command.srb_id;
+      if (!srb_id.has_value()) {
+        srb_id = srb_id_t::srb1;
+      }
+
+      du_ue* ue = ue_manager.find_du_ue(command.ue_index);
+      srsran_assert(ue != nullptr, "Could not find DU UE");
+
+      auto& srb = ue->get_srbs()[*srb_id];
+      srsran_assert(srb.pdcp_context.has_value(), "Could not find PDCP context");
+      srsran_assert(srb.pdcp_context->entity != nullptr, "Incomplete PDCP context");
+
+      f1ap_ue_context_release_cmd.rrc_release_pdu =
+        srb.pdcp_context->entity->get_tx_upper_data_interface().handle_pdu(command.rrc_release_pdu.copy());
+    }
 
     CORO_AWAIT_VALUE(f1ap_ue_context_release_result,
                      f1ap_ue_ctxt_notifier.on_ue_context_release_command(f1ap_ue_context_release_cmd));

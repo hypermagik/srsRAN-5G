@@ -114,6 +114,9 @@ public:
 
   /// Handle the incoming SDU.
   virtual void handle_sdu(byte_buffer sdu) = 0;
+
+  /// Handle PDU transported via other meeans
+  virtual byte_buffer handle_pdu(byte_buffer pdu) = 0;
 };
 
 /// This interface represents the control SAP of the transmitting side of a PDCP entity.

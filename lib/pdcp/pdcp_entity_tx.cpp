@@ -28,13 +28,7 @@
 
 using namespace srsran;
 
-/// \brief Receive an SDU from the upper layers, apply encryption
-/// and integrity protection and pass the resulting PDU
-/// to the lower layers.
-///
-/// \param sdu Buffer that hold the SDU from higher layers.
-/// \ref TS 38.323 section 5.2.1: Transmit operation
-void pdcp_entity_tx::handle_sdu(byte_buffer sdu)
+byte_buffer pdcp_entity_tx::handle_sdu_common(byte_buffer sdu)
 {
   metrics_add_sdus(1, sdu.length());
   logger.log_debug(sdu.begin(), sdu.end(), "TX SDU. sdu_len={}", sdu.length());
@@ -49,7 +43,7 @@ void pdcp_entity_tx::handle_sdu(byte_buffer sdu)
       upper_cn.on_protocol_failure();
       max_count_overflow = true;
     }
-    return;
+    return byte_buffer();
   }
   if (st.tx_next >= cfg.max_count.notify) {
     if (!max_count_notified) {
@@ -90,11 +84,38 @@ void pdcp_entity_tx::handle_sdu(byte_buffer sdu)
     logger.log_debug("Set discard timer. count={} timeout={}", st.tx_next, static_cast<uint32_t>(cfg.discard_timer));
   }
 
+  return protected_buf;
+}
+
+/// \brief Receive an SDU from the upper layers, apply encryption
+/// and integrity protection and pass the resulting PDU
+/// to the lower layers.
+///
+/// \param sdu Buffer that hold the SDU from higher layers.
+/// \ref TS 38.323 section 5.2.1: Transmit operation
+void pdcp_entity_tx::handle_sdu(byte_buffer sdu)
+{
+  byte_buffer buf = handle_sdu_common(std::move(sdu));
+
   // Write to lower layers
-  write_data_pdu_to_lower_layers(st.tx_next, std::move(protected_buf));
+  write_data_pdu_to_lower_layers(st.tx_next, std::move(buf));
 
   // Increment TX_NEXT
   st.tx_next++;
+}
+
+/// \brief Add PDCP headers and apply encryption and integrity protection
+/// to an existing PDU.
+///
+/// \param pdu Buffer that holds the PDU.
+byte_buffer pdcp_entity_tx::handle_pdu(byte_buffer pdu)
+{
+  byte_buffer buf = handle_sdu_common(std::move(pdu));
+
+  // Increment TX_NEXT
+  st.tx_next++;
+
+  return buf;
 }
 
 void pdcp_entity_tx::reestablish(security::sec_128_as_config sec_cfg_)
