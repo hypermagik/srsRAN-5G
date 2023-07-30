@@ -103,6 +103,19 @@ public:
                                 span<const cf_t>           iq_buffer,
                                 uplane_rx_symbol_notifier& notifier)
   {
+    // Adjust symbol index
+    if (is_long_preamble(context.format)) {
+      const double pusch_symbol_duration =
+          static_cast<double>(SUBFRAME_DURATION_MSEC) /
+          static_cast<double>(get_nof_slots_per_subframe(context.pusch_scs) * get_nsymb_per_slot(cyclic_prefix::NORMAL));
+      const double cp_length = preamble_info.cp_length.to_seconds() * 1000;
+      const unsigned prach_start_symbol = context.start_symbol + (cp_length / pusch_symbol_duration);
+
+      srsran_assert(symbol >= prach_start_symbol, "Invalid symbol index {}, expected >= {}", symbol, prach_start_symbol);
+
+      symbol -= prach_start_symbol;
+    }
+
     srsran_assert(buffer, "No valid PRACH buffer in the context");
     srsran_assert(symbol < nof_symbols, "Invalid symbol index");
 
