@@ -46,7 +46,8 @@ ngap_test::ngap_test() : ngap_ue_task_scheduler(timers, ctrl_worker)
   cfg.slice_configurations.push_back(slice_cfg);
   cfg.ue_context_setup_timeout_s = std::chrono::seconds(2);
 
-  ngap = create_ngap(cfg, cu_cp_paging_notifier, ngap_ue_task_scheduler, ue_mng, msg_notifier, ctrl_worker);
+  ngap = create_ngap(
+      cfg, cu_cp_connection_notifier, cu_cp_paging_notifier, ngap_ue_task_scheduler, ue_mng, msg_notifier, ctrl_worker);
 
   du_processor_notifier =
       std::make_unique<dummy_ngap_du_processor_notifier>(ngap->get_ngap_ue_context_removal_handler());
