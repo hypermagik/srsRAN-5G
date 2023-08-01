@@ -61,8 +61,7 @@ fill_uci_on_pusch(uci_info& uci, const uci_on_pusch& uci_cfg, unsigned harq_ack_
   // The values of \c beta_offsets are set according to Section 9.3, TS38.213.
   if (uci.harq_ack_nof_bits <= 2) {
     uci.beta_offset_harq_ack = beta_offsets.beta_offset_ack_idx_1.value();
-  }
-  if (uci.harq_ack_nof_bits > 2 and uci.harq_ack_nof_bits <= 11) {
+  } else if (uci.harq_ack_nof_bits > 2 and uci.harq_ack_nof_bits <= 11) {
     uci.beta_offset_harq_ack = beta_offsets.beta_offset_ack_idx_2.value();
   } else {
     uci.beta_offset_harq_ack = beta_offsets.beta_offset_ack_idx_3.value();
