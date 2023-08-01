@@ -25,6 +25,8 @@
 #include "lib/ngap/ngap_asn1_packer.h"
 #include "srsran/ngap/ngap.h"
 #include "srsran/support/io/io_broker.h"
+#include "srsran/support/timers.h"
+#include "srsran/support/executors/task_executor.h"
 
 namespace srsran {
 
@@ -37,11 +39,21 @@ class ngap_network_adapter : public ngap_message_notifier,
                              public network_gateway_data_notifier
 {
 public:
-  ngap_network_adapter(io_broker& broker_, dlt_pcap& pcap_) : broker(broker_), pcap(pcap_)
+  ngap_network_adapter(io_broker& broker_, dlt_pcap& pcap_, timer_manager& timers, task_executor& exec) :
+      broker(broker_), pcap(pcap_), reconnect_timer(timers.create_unique_timer(exec))
   {
     if (gateway_ctrl_handler != nullptr) {
       broker.unregister_fd(gateway_ctrl_handler->get_socket_fd());
     }
+
+    reconnect_timer.set(std::chrono::seconds(1), [this](timer_id_t) {
+      broker.unregister_fd(gateway_ctrl_handler->get_socket_fd());
+      if (gateway_ctrl_handler->recreate_and_reconnect()) {
+        broker.register_fd(gateway_ctrl_handler->get_socket_fd(), [this](int fd) { gateway_ctrl_handler->receive(); });
+      } else {
+        reconnect_timer.run();
+      }
+    });
   }
 
   void connect_gateway(sctp_network_gateway_controller*   gateway_ctrl_handler_,
@@ -105,18 +117,30 @@ private:
 
   void on_connection_loss() override
   {
-    report_fatal_error_if_not(event_handler, "NGAP handler not set.");
-    event_handler->handle_connection_loss();
+    logger.debug("on_connection_loss");
+
+    if (event_handler != nullptr) {
+      event_handler->handle_connection_loss();
+    }
+
+    if (gateway_ctrl_handler != nullptr) {
+      reconnect_timer.run();
+    }
   }
 
   void on_connection_established() override
   {
     // TODO: extend event interface to inform about connection establishment
     logger.debug("on_connection_established");
+
+    if (event_handler != nullptr) {
+      event_handler->handle_connection_established();
+    }
   }
 
   io_broker&                         broker;
   dlt_pcap&                          pcap;
+  unique_timer                       reconnect_timer;
   std::unique_ptr<ngap_asn1_packer>  packer;
   sctp_network_gateway_controller*   gateway_ctrl_handler = nullptr;
   sctp_network_gateway_data_handler* gateway_data_handler = nullptr;
