@@ -113,7 +113,8 @@ protected:
 
     ngap_ue_task_scheduler = std::make_unique<dummy_ngap_ue_task_scheduler>(timers, ctrl_worker);
 
-    ngap = create_ngap(cfg, cu_cp_paging_notifier, *ngap_ue_task_scheduler, ue_mng, *adapter, ctrl_worker);
+    ngap = create_ngap(
+        cfg, cu_cp_connection_notifier, cu_cp_paging_notifier, *ngap_ue_task_scheduler, ue_mng, *adapter, ctrl_worker);
     adapter->connect_ngap(ngap.get());
   }
 
@@ -122,6 +123,7 @@ protected:
   up_resource_manager_cfg                       up_config;
   timer_manager                                 timers;
   ue_manager                                    ue_mng{ue_config, up_config};
+  dummy_ngap_cu_cp_connection_notifier          cu_cp_connection_notifier;
   dummy_ngap_cu_cp_paging_notifier              cu_cp_paging_notifier;
   std::unique_ptr<dummy_ngap_ue_task_scheduler> ngap_ue_task_scheduler;
   std::unique_ptr<ngap_network_adapter>         adapter;

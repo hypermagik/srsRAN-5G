@@ -43,7 +43,8 @@ public:
     logger(srslog::fetch_basic_logger("E2-RIC")), pdu_notifier(e2_pdu_notifier_){};
 
   /// E2_event_ handler functions.
-  void handle_connection_loss() override{};
+  void handle_connection_established() override {}
+  void handle_connection_loss() override {}
 
   /// E2 message handler functions.
   void handle_message(const e2_message& msg) override
@@ -106,7 +107,8 @@ public:
     decorated_e2_event_handler(decorated_iface_){};
 
   /// E2_event_ handler functions.
-  void handle_connection_loss() override { decorated_e2_event_handler.handle_connection_loss(); };
+  void handle_connection_established() override { decorated_e2_event_handler.handle_connection_established(); }
+  void handle_connection_loss() override { decorated_e2_event_handler.handle_connection_loss(); }
 
   /// E2 message handler functions.
   void handle_message(const e2_message& msg) override
