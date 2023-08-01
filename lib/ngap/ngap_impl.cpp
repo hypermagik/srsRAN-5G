@@ -41,6 +41,7 @@ using namespace asn1::ngap;
 using namespace srs_cu_cp;
 
 ngap_impl::ngap_impl(ngap_configuration&                ngap_cfg_,
+                     ngap_cu_cp_connection_notifier&    cu_cp_conn_notifier_,
                      ngap_cu_cp_du_repository_notifier& cu_cp_du_repository_notifier_,
                      ngap_ue_task_scheduler&            task_sched_,
                      ngap_ue_manager&                   ue_manager_,
@@ -48,6 +49,7 @@ ngap_impl::ngap_impl(ngap_configuration&                ngap_cfg_,
                      task_executor&                     ctrl_exec_) :
   logger(srslog::fetch_basic_logger("NGAP")),
   ue_ctxt_list(logger),
+  cu_cp_conn_notifier(cu_cp_conn_notifier_),
   cu_cp_du_repository_notifier(cu_cp_du_repository_notifier_),
   task_sched(task_sched_),
   ue_manager(ue_manager_),
@@ -698,6 +700,16 @@ void ngap_impl::handle_unsuccessful_outcome(const unsuccessful_outcome_s& outcom
     default:
       logger.error("Unsuccessful outcome of type {} is not supported", outcome.value.type().to_string());
   }
+}
+
+void ngap_impl::handle_connection_established()
+{
+  cu_cp_conn_notifier.on_ngap_connection();
+}
+
+void ngap_impl::handle_connection_loss()
+{
+  cu_cp_conn_notifier.on_ngap_connection_drop();
 }
 
 bool ngap_impl::handle_ue_context_release_request(const cu_cp_ue_context_release_request& msg)

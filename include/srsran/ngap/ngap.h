@@ -51,8 +51,9 @@ public:
 class ngap_event_handler
 {
 public:
-  virtual ~ngap_event_handler()         = default;
-  virtual void handle_connection_loss() = 0;
+  virtual ~ngap_event_handler()                = default;
+  virtual void handle_connection_established() = 0;
+  virtual void handle_connection_loss()        = 0;
 };
 
 /// This interface notifies the reception of new NGAP messages over the NGAP interface.
@@ -106,6 +107,12 @@ class ngap_cu_cp_connection_notifier
 {
 public:
   virtual ~ngap_cu_cp_connection_notifier() = default;
+
+  /// \brief Notifies the CU-CP about a successful NGAP connection.
+  virtual void on_ngap_connection() = 0;
+
+  /// \brief Notifies the CU-CP about a dropped NGAP connection.
+  virtual void on_ngap_connection_drop() = 0;
 
   /// \brief Notifies the CU-CP about a successful AMF connection.
   virtual void on_amf_connection() = 0;

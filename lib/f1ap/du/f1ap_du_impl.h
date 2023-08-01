@@ -56,6 +56,7 @@ public:
 
   // F1AP message handler functions
   void handle_message(const f1ap_message& msg) override;
+  void handle_connection_established() override {}
   void handle_connection_loss() override {}
 
   // F1AP UE configuration functions

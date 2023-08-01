@@ -51,8 +51,9 @@ public:
 class e2_event_handler
 {
 public:
-  virtual ~e2_event_handler()           = default;
-  virtual void handle_connection_loss() = 0;
+  virtual ~e2_event_handler()                  = default;
+  virtual void handle_connection_established() = 0;
+  virtual void handle_connection_loss()        = 0;
 };
 
 /// This interface notifies the reception of new E2 messages over the E2 interface.
