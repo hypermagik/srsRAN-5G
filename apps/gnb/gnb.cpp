@@ -395,7 +395,7 @@ int main(int argc, char** argv)
 
   // Create NGAP adapter.
   std::unique_ptr<srsran::srs_cu_cp::ngap_network_adapter> ngap_adapter =
-      std::make_unique<srsran::srs_cu_cp::ngap_network_adapter>(*epoll_broker, *ngap_p);
+      std::make_unique<srsran::srs_cu_cp::ngap_network_adapter>(*epoll_broker, *ngap_p, app_timers, *workers.cu_cp_exec);
 
   // Create SCTP network adapter.
   std::unique_ptr<sctp_network_gateway> sctp_gateway = {};

@@ -79,6 +79,18 @@ public:
     cu_cp_du_repository_handler = &cu_cp_du_repository_handler_;
   }
 
+  void on_ngap_connection() override
+  {
+    srsran_assert(cu_cp_amf_handler != nullptr, "CU-CP AMF handler must not be nullptr");
+    cu_cp_amf_handler->handle_ngap_connection();
+  }
+
+  void on_ngap_connection_drop() override
+  {
+    srsran_assert(cu_cp_amf_handler != nullptr, "CU-CP AMF handler must not be nullptr");
+    cu_cp_amf_handler->handle_ngap_connection_drop();
+  }
+
   void on_amf_connection() override
   {
     srsran_assert(cu_cp_amf_handler != nullptr, "CU-CP AMF handler must not be nullptr");

@@ -37,6 +37,12 @@ class cu_cp_ngap_handler
 public:
   virtual ~cu_cp_ngap_handler() = default;
 
+  /// \brief Handles a NGAP connection notification.
+  virtual void handle_ngap_connection() = 0;
+
+  /// \brief Handles a NGAP connection drop notification.
+  virtual void handle_ngap_connection_drop() = 0;
+
   /// \brief Handles a AMF connection notification.
   virtual void handle_amf_connection() = 0;
 
