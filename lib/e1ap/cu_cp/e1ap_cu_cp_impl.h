@@ -68,6 +68,7 @@ public:
 
   void handle_message(const e1ap_message& msg) override;
 
+  void handle_connection_established() override {}
   void handle_connection_loss() override {}
 
   // e1ap ue handler functions

@@ -73,7 +73,7 @@ cu_cp_impl::cu_cp_impl(const cu_cp_configuration& config_) :
 
   // Create NGAP.
   ngap_entity = create_ngap(
-      cfg.ngap_config, ngap_cu_cp_ev_notifier, ngap_task_sched, ue_mng, *cfg.ngap_notifier, *cfg.cu_cp_executor);
+      cfg.ngap_config, ngap_cu_cp_ev_notifier, ngap_cu_cp_ev_notifier, ngap_task_sched, ue_mng, *cfg.ngap_notifier, *cfg.cu_cp_executor);
   ngap_adapter.connect_ngap(ngap_entity->get_ngap_connection_manager(),
                             ngap_entity->get_ngap_control_message_handler());
   du_processor_ngap_notifier.connect_ngap(ngap_entity->get_ngap_control_message_handler());
@@ -167,6 +167,27 @@ void cu_cp_impl::handle_cu_up_remove_request(const cu_up_index_t cu_up_index)
 void cu_cp_impl::handle_bearer_context_inactivity_notification(const cu_cp_inactivity_notification& msg)
 {
   du_db.handle_inactivity_notification(get_du_index_from_ue_index(msg.ue_index), msg);
+}
+
+void cu_cp_impl::handle_ngap_connection()
+{
+  logger.debug("handle_ngap_connection");
+
+  if (not cfg.cu_cp_executor->execute([this]() {
+        // start NG setup procedure.
+        if (amf_connected) {
+          routine_mng->start_initial_cu_cp_setup_routine(cfg.ngap_config);
+        }
+      })) {
+    report_fatal_error("Failed to initiate CU-CP setup.");
+  }
+}
+
+void cu_cp_impl::handle_ngap_connection_drop()
+{
+  logger.debug("handle_ngap_connection_drop");
+
+  du_db.handle_amf_connection_drop();
 }
 
 void cu_cp_impl::handle_amf_connection()
