@@ -204,6 +204,10 @@ bool ue_cell_grid_allocator::allocate_dl_grant(const ue_pdsch_grant& grant)
   sch_mcs_index adjusted_mcs{grant.mcs};
   if (not pdsch_alloc.result.dl.csi_rs.empty()) {
     adjusted_mcs = adjusted_mcs == 0 ? adjusted_mcs : adjusted_mcs - 1;
+    // Reduce estimated MCS by 2 when MCS table is 256QAM
+    if (pdsch_cfg.mcs_table == pdsch_mcs_table::qam256) {
+      adjusted_mcs = adjusted_mcs == 0 ? adjusted_mcs : adjusted_mcs - 1;
+    }
   }
 
   optional<sch_mcs_tbs> mcs_tbs_info;
