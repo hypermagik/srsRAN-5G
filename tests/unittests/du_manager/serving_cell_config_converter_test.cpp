@@ -426,8 +426,10 @@ TEST(serving_cell_config_converter_test, test_ue_custom_pucch_cfg_conversion)
   // Remove first element.
   dest_pucch_cfg.pucch_res_list.erase(dest_pucch_cfg.pucch_res_list.begin());
 
+  dest_pucch_cfg.dl_data_to_ul_ack.clear();
   dest_pucch_cfg.dl_data_to_ul_ack.push_back(2);
   dest_pucch_cfg.dl_data_to_ul_ack.push_back(3);
+  dest_pucch_cfg.dl_data_to_ul_ack.push_back(4);
 
   // Release default one.
   dest_pucch_cfg.format_1_common_param.reset();
