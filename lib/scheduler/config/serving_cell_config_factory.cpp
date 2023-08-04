@@ -567,7 +567,7 @@ uplink_config srsran::config_helpers::make_default_ue_uplink_config(const cell_c
   // Inactive for format1_0."
   // Note2: Only k1 >= 4 supported.
   if (band_helper::get_duplex_mode(get_band(params)) == duplex_mode::FDD) {
-    pucch_cfg.dl_data_to_ul_ack = {SCHEDULER_MIN_K1};
+    pucch_cfg.dl_data_to_ul_ack = {4, 5, 6, 7, 8};
   } else {
     // TDD
     pucch_cfg.dl_data_to_ul_ack = generate_k1_candidates(make_default_tdd_ul_dl_config_common(params));
