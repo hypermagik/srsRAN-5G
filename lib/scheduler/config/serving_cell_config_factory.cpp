@@ -652,7 +652,10 @@ uplink_config srsran::config_helpers::make_default_ue_uplink_config(const cell_c
   // Inactive for format1_0."
   // Note2: Only k1 >= 4 supported.
   if (band_helper::get_duplex_mode(params.band.value()) == duplex_mode::FDD) {
-    pucch_cfg.dl_data_to_ul_ack = {params.min_k1};
+    const auto max_k1 = std::min<uint8_t>(SCHEDULER_MAX_K1, params.min_k1 + pucch_cfg.dl_data_to_ul_ack.capacity() - 1);
+    for (uint8_t k1 = params.min_k1; k1 <= max_k1; ++k1) {
+      pucch_cfg.dl_data_to_ul_ack.push_back(k1);
+    }
   } else {
     // TDD
     pucch_cfg.dl_data_to_ul_ack = generate_k1_candidates(*params.tdd_ul_dl_cfg_common, params.min_k1);
