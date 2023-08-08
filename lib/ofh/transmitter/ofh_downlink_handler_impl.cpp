@@ -33,9 +33,7 @@ downlink_handler_impl::downlink_handler_impl(const downlink_handler_impl_config&
   window_checker(std::move(dependencies.window_checker)),
   dl_eaxc(config.dl_eaxc),
   data_flow_cplane(std::move(dependencies.data_flow_cplane)),
-  data_flow_uplane(std::move(dependencies.data_flow_uplane)),
-  frame_pool_ptr(dependencies.frame_pool_ptr),
-  frame_pool(*frame_pool_ptr)
+  data_flow_uplane(std::move(dependencies.data_flow_uplane))
 {
   srsran_assert(window_checker, "Invalid transmission window checker");
   srsran_assert(data_flow_cplane, "Invalid Control-Plane data flow");
@@ -48,9 +46,6 @@ void downlink_handler_impl::handle_dl_data(const resource_grid_context& context,
                 "RU number of ports={} must be equal or greater than cell number of ports={}",
                 dl_eaxc.size(),
                 grid.get_nof_ports());
-
-  // Clear any stale buffers associated with the context slot.
-  frame_pool.clear_slot(context.slot);
 
   if (window_checker->is_late(context.slot)) {
     logger.warning(

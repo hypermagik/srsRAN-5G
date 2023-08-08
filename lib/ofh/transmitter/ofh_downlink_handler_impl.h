@@ -27,7 +27,6 @@
 #include "ofh_tx_window_checker.h"
 #include "srsran/adt/span.h"
 #include "srsran/adt/static_vector.h"
-#include "srsran/ofh/ethernet/ethernet_frame_pool.h"
 #include "srsran/ofh/ofh_constants.h"
 #include "srsran/ofh/transmitter/ofh_downlink_handler.h"
 
@@ -50,8 +49,6 @@ struct downlink_handler_impl_dependencies {
   std::unique_ptr<data_flow_uplane_downlink_data> data_flow_uplane;
   /// Transmission window checker.
   std::unique_ptr<tx_window_checker> window_checker;
-  /// Ethernet frame pool.
-  std::shared_ptr<ether::eth_frame_pool> frame_pool_ptr;
 };
 
 /// Open Fronthaul downlink handler implementation.
@@ -69,8 +66,6 @@ private:
   const static_vector<unsigned, MAX_NOF_SUPPORTED_EAXC> dl_eaxc;
   std::unique_ptr<data_flow_cplane_scheduling_commands> data_flow_cplane;
   std::unique_ptr<data_flow_uplane_downlink_data>       data_flow_uplane;
-  std::shared_ptr<ether::eth_frame_pool>                frame_pool_ptr;
-  ether::eth_frame_pool&                                frame_pool;
 };
 
 } // namespace ofh

@@ -81,7 +81,6 @@ TEST(ofh_downlink_handler_impl, handling_downlink_data_use_control_and_user_plan
   dependencies.data_flow_uplane                                  = std::move(uplane);
   dependencies.window_checker =
       std::make_unique<tx_window_checker>(*dependencies.logger, nof_symbols_before_ota, nof_symbols, numerlogy);
-  dependencies.frame_pool_ptr = std::make_shared<ether::eth_frame_pool>();
 
   auto& window_checker = *dependencies.window_checker;
 

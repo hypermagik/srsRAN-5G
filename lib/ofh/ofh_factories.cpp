@@ -347,7 +347,6 @@ create_downlink_handler(const transmitter_config&                         tx_con
       *tx_depen.logger, nof_symbols_before_ota, nof_symbols, to_numerology_value(tx_config.scs));
   dl_dependencies.data_flow_cplane = std::move(data_flow_cplane);
   dl_dependencies.data_flow_uplane = std::move(data_flow_uplane);
-  dl_dependencies.frame_pool_ptr   = tx_depen.frame_pool;
 
   tx_depen.window_handler = dl_dependencies.window_checker.get();
 
