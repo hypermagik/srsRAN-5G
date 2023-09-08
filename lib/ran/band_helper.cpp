@@ -785,7 +785,7 @@ uint32_t srsran::band_helper::get_ul_arfcn_from_dl_arfcn(uint32_t dl_arfcn, opti
 
   // Derive UL ARFCN for FDD bands.
   for (const nr_band_raster& b_it : nr_band_table_fr1) {
-    if (b_it.band == get_band_from_dl_arfcn(dl_arfcn)) {
+    if (b_it.band == operating_band) {
       const uint32_t offset = (dl_arfcn - b_it.dl_nref_first) / b_it.dl_nref_step;
       return (b_it.ul_nref_first + offset * b_it.ul_nref_step);
     }
