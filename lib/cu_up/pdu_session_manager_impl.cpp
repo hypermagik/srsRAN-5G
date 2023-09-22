@@ -440,21 +440,6 @@ void pdu_session_manager_impl::remove_pdu_session(pdu_session_id_t pdu_session_i
     return;
   }
 
-  // Disconnect all UL tunnels for this PDU session.
-  auto& pdu_session = pdu_sessions.at(pdu_session_id);
-  for (const auto& drb : pdu_session->drbs) {
-    logger.log_debug("Disconnecting CU bearer with UL-TEID={}", drb.second->f1u_ul_teid);
-    up_transport_layer_info f1u_ul_tunnel_addr;
-    f1u_ul_tunnel_addr.tp_address.from_string(net_config.f1u_bind_addr);
-    f1u_ul_tunnel_addr.gtp_teid = drb.second->f1u_ul_teid;
-    f1u_gw.disconnect_cu_bearer(f1u_ul_tunnel_addr);
-    if (f1u_teid_allocator.release_teid(drb.second->f1u_ul_teid)) {
-      logger.log_error("psi={} could not remove ul_teid at session termination. ul_teid={}",
-                       pdu_session_id,
-                       drb.second->f1u_ul_teid);
-    }
-  }
-
   pdu_sessions.erase(pdu_session_id);
   logger.log_info("Removing PDU session with psi={}", pdu_session_id);
 }
