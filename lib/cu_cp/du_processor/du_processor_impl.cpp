@@ -551,7 +551,7 @@ void du_processor_impl::handle_inactivity_notification(const cu_cp_inactivity_no
   if (msg.ue_inactive) {
     cu_cp_ue_context_release_request req;
     req.ue_index = msg.ue_index;
-    req.cause    = cause_radio_network_t::unspecified;
+    req.cause    = cause_radio_network_t::user_inactivity;
 
     // Add PDU Session IDs
     auto& up_resource_manager            = ue->get_up_resource_manager();
