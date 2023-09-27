@@ -191,7 +191,7 @@ inline std::string get_cpu_feature_info()
 inline bool cpu_supports_included_features()
 {
   for (cpu_feature feature : cpu_features_included) {
-    if (!cpu_supports_feature(feature)) {
+    if (!cpu_supports_feature(feature) && feature != cpu_feature::fma) {
       return false;
     }
   }
