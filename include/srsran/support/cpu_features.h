@@ -191,6 +191,11 @@ inline std::string get_cpu_feature_info()
 inline bool cpu_supports_included_features()
 {
   for (cpu_feature feature : cpu_features_included) {
+#ifdef __x86_64__
+    if (feature == cpu_feature::fma) {
+      continue;
+    }
+#endif
     if (!cpu_supports_feature(feature)) {
       return false;
     }
