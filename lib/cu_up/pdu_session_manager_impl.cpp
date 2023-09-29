@@ -478,6 +478,19 @@ pdu_session_manager_impl::modify_pdu_session(const e1ap_pdu_session_res_to_modif
     logger.log_info("Removed {} for {}", drb_to_rem, session.pdu_session_id);
   }
 
+  if (security_result_required(pdu_session->security_ind)) {
+    pdu_session_result.security_result = security_result_t{};
+    auto& sec_res                      = pdu_session_result.security_result.value();
+    sec_res.integrity_protection_result =
+        pdu_session->security_ind.integrity_protection_ind == integrity_protection_indication_t::not_needed
+            ? integrity_protection_result_t::not_performed
+            : integrity_protection_result_t::performed;
+    sec_res.confidentiality_protection_result =
+        pdu_session->security_ind.confidentiality_protection_ind == confidentiality_protection_indication_t::not_needed
+            ? confidentiality_protection_result_t::not_performed
+            : confidentiality_protection_result_t::performed;
+  }
+
   pdu_session_result.success = true;
   return pdu_session_result;
 }
