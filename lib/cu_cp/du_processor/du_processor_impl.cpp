@@ -546,7 +546,10 @@ void du_processor_impl::handle_paging_message(cu_cp_paging_message& msg)
 void du_processor_impl::handle_inactivity_notification(const cu_cp_inactivity_notification& msg)
 {
   du_ue* ue = ue_manager.find_du_ue(msg.ue_index);
-  srsran_assert(ue != nullptr, "ue={}: Could not find DU UE", msg.ue_index);
+  if (ue == nullptr) {
+    logger.warning("ue={}: Could not find DU UE for inactivity notification", msg.ue_index);
+    return;
+  }
 
   if (msg.ue_inactive) {
     cu_cp_ue_context_release_request req;
