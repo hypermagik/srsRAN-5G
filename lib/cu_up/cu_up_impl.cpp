@@ -270,7 +270,8 @@ void process_successful_pdu_resource_modification_outcome(
 {
   if (result.success) {
     e1ap_pdu_session_resource_modified_item modified_item;
-    modified_item.pdu_session_id = result.pdu_session_id;
+    modified_item.pdu_session_id  = result.pdu_session_id;
+    modified_item.security_result = result.security_result;
 
     for (const auto& drb_setup_item : result.drb_setup_results) {
       logger.debug("Adding DRB setup result item. {}, success={}", drb_setup_item.drb_id, drb_setup_item.success);
