@@ -556,6 +556,20 @@ bool srsran::srs_cu_cp::update_modify_list(
 
     // Start/continue filling response item.
     cu_cp_pdu_session_resource_modify_response_item& ngap_item = ngap_response_list[psi];
+
+    // Determine security settings for this PDU session
+    bool integrity_enabled = false;
+    bool ciphering_enabled = false;
+
+    // Apply security settings according to the decision in the CU-UP.
+    if (e1ap_item.security_result.has_value()) {
+      auto& sec_res     = e1ap_item.security_result.value();
+      integrity_enabled = sec_res.integrity_protection_result == integrity_protection_result_t::performed;
+      ciphering_enabled = sec_res.confidentiality_protection_result == confidentiality_protection_result_t::performed;
+    }
+
+    auto& next_cfg_pdu_session = next_config.pdu_sessions_to_modify_list.at(psi);
+
     for (const auto& e1ap_drb_item : e1ap_item.drb_setup_list_ng_ran) {
       const auto& drb_id = e1ap_drb_item.drb_id;
       if (next_config.pdu_sessions_to_modify_list.at(psi).drb_to_add.find(drb_id) ==
@@ -572,7 +586,7 @@ bool srsran::srs_cu_cp::update_modify_list(
                                         nullptr,
                                         psi,
                                         drb_id,
-                                        next_config.pdu_sessions_to_modify_list.at(psi).drb_to_add.at(drb_id),
+                                        next_cfg_pdu_session.drb_to_add.at(drb_id),
                                         e1ap_drb_item,
                                         request_transfer.qos_flow_add_or_modify_request_list,
                                         logger)) {
@@ -593,12 +607,15 @@ bool srsran::srs_cu_cp::update_modify_list(
         ngap_item.transfer.qos_flow_add_or_modify_response_list.value().emplace(qos_flow.qos_flow_id, qos_flow);
       }
 
+      next_cfg_pdu_session.drb_to_add.find(drb_id)->second.pdcp_cfg.integrity_protection_required = integrity_enabled;
+      next_cfg_pdu_session.drb_to_add.find(drb_id)->second.pdcp_cfg.ciphering_required            = ciphering_enabled;
+
       // Finally add DRB to setup to UE context modification.
       ue_context_mod_request.drbs_to_be_setup_mod_list.emplace(e1ap_drb_item.drb_id, drb_setup_mod_item);
     }
 
     // Add DRB to be removed to UE context modifcation.
-    for (const auto& drb_id : next_config.pdu_sessions_to_modify_list.at(psi).drb_to_remove) {
+    for (const auto& drb_id : next_cfg_pdu_session.drb_to_remove) {
       ue_context_mod_request.drbs_to_be_released_list.push_back(drb_id);
     }
 
