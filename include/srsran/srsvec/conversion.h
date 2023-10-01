@@ -31,6 +31,20 @@
 namespace srsran {
 namespace srsvec {
 
+/// \brief Converts from complex float to int8 applying the given scaling
+///
+/// \param [in] x is the input data
+/// \param [in] scale input data scaling prior conversion
+/// \param [out] z resultant data
+void convert(span<int8_t> z, span<const cf_t> x, float scale);
+
+/// \brief Converts from int8 to complex float applying the given scaling
+///
+/// \param [in] x is the input data
+/// \param [in] scale input data scaling after conversion
+/// \param [out] z resultant data
+void convert(span<cf_t> z, span<const int8_t> x, float scale);
+
 /// \brief Converts a sequence of numbers from complex float to int16 applying the given scaling and rounding the result
 /// to the nearest integer.
 ///
