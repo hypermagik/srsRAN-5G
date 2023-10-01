@@ -26,6 +26,112 @@
 using namespace srsran;
 using namespace srsvec;
 
+static void convert_fb_simd(const float* x, int8_t* z, float scale, unsigned len)
+{
+  unsigned i = 0;
+
+  // Force the use of SSE here instead of AVX since the implementations requires too many permutes across 128-bit
+  // boundaries
+
+#ifdef HAVE_SSE
+  __m128 s = _mm_set1_ps(scale);
+  if (SIMD_IS_ALIGNED(x) && SIMD_IS_ALIGNED(z)) {
+    for (; i + 16 <= len; i += 16) {
+      __m128 a = _mm_load_ps(&x[i]);
+      __m128 b = _mm_load_ps(&x[i + 1 * 4]);
+      __m128 c = _mm_load_ps(&x[i + 2 * 4]);
+      __m128 d = _mm_load_ps(&x[i + 3 * 4]);
+
+      __m128 sa = _mm_mul_ps(a, s);
+      __m128 sb = _mm_mul_ps(b, s);
+      __m128 sc = _mm_mul_ps(c, s);
+      __m128 sd = _mm_mul_ps(d, s);
+
+      __m128i ai = _mm_cvttps_epi32(sa);
+      __m128i bi = _mm_cvttps_epi32(sb);
+      __m128i ci = _mm_cvttps_epi32(sc);
+      __m128i di = _mm_cvttps_epi32(sd);
+      __m128i ab = _mm_packs_epi32(ai, bi);
+      __m128i cd = _mm_packs_epi32(ci, di);
+
+      __m128i i8 = _mm_packs_epi16(ab, cd);
+
+      _mm_store_si128((__m128i*)&z[i], i8);
+    }
+  } else {
+    for (; i + 16 <= len; i += 16) {
+      __m128 a = _mm_loadu_ps(&x[i]);
+      __m128 b = _mm_loadu_ps(&x[i + 1 * 4]);
+      __m128 c = _mm_loadu_ps(&x[i + 2 * 4]);
+      __m128 d = _mm_loadu_ps(&x[i + 3 * 4]);
+
+      __m128 sa = _mm_mul_ps(a, s);
+      __m128 sb = _mm_mul_ps(b, s);
+      __m128 sc = _mm_mul_ps(c, s);
+      __m128 sd = _mm_mul_ps(d, s);
+
+      __m128i ai = _mm_cvttps_epi32(sa);
+      __m128i bi = _mm_cvttps_epi32(sb);
+      __m128i ci = _mm_cvttps_epi32(sc);
+      __m128i di = _mm_cvttps_epi32(sd);
+      __m128i ab = _mm_packs_epi32(ai, bi);
+      __m128i cd = _mm_packs_epi32(ci, di);
+
+      __m128i i8 = _mm_packs_epi16(ab, cd);
+
+      _mm_storeu_si128((__m128i*)&z[i], i8);
+    }
+  }
+#endif /* HAVE_SSE */
+
+  for (; i < len; i++) {
+    z[i] = (int8_t)(x[i] * scale);
+  }
+}
+
+static void convert_bf_simd(const int8_t* x, float* z, const float scale, unsigned len)
+{
+  unsigned    i    = 0;
+  const float gain = 1.0f / scale;
+
+#ifdef HAVE_SSE
+  __m128 s = _mm_set1_ps(gain);
+  if (SIMD_IS_ALIGNED(z)) {
+    for (; i + 8 <= len; i += 8) {
+      __m64 a8   = *(__m64*)&x[i];
+      __m64 sign = _mm_cmpgt_pi8(_mm_setzero_si64(), a8);
+
+      __m64 v0i16 = _mm_unpacklo_pi8(a8, sign);
+      __m64 v1i16 = _mm_unpackhi_pi8(a8, sign);
+
+      __m128 v0 = _mm_cvtpi16_ps(v0i16);
+      __m128 v1 = _mm_cvtpi16_ps(v1i16);
+
+      _mm_store_ps(&z[i], _mm_mul_ps(v0, s));
+      _mm_store_ps(&z[i + 4], _mm_mul_ps(v1, s));
+    }
+  } else {
+    for (; i + 8 <= len; i += 8) {
+      __m64 a8   = *(__m64*)&x[i];
+      __m64 sign = _mm_cmpgt_pi8(_mm_setzero_si64(), a8);
+
+      __m64 v0i16 = _mm_unpacklo_pi8(a8, sign);
+      __m64 v1i16 = _mm_unpackhi_pi8(a8, sign);
+
+      __m128 v0 = _mm_cvtpi16_ps(v0i16);
+      __m128 v1 = _mm_cvtpi16_ps(v1i16);
+
+      _mm_storeu_ps(&z[i], _mm_mul_ps(v0, s));
+      _mm_storeu_ps(&z[i + 4], _mm_mul_ps(v1, s));
+    }
+  }
+#endif /* HAVE_SSE */
+
+  for (; i < len; i++) {
+    z[i] = (float)x[i] * gain;
+  }
+}
+
 static void convert_fi_simd(const float* x, int16_t* z, float scale, unsigned len)
 {
   unsigned i = 0;
@@ -467,6 +573,20 @@ static void convert_scaled_int16_to_bf16_simd(bf16_t* out, const int16_t* in, co
   for (; i != len; ++i) {
     out[i] = to_bf16(static_cast<float>(in[i]) * in_gain[i]);
   }
+}
+
+void srsran::srsvec::convert(span<const cf_t> x, float scale, span<int8_t> z)
+{
+  assert(2 * x.size() == z.size());
+
+  convert_fb_simd((const float*)x.data(), z.data(), scale, z.size());
+}
+
+void srsran::srsvec::convert(span<const int8_t> x, float scale, span<cf_t> z)
+{
+  assert(x.size() == 2 * z.size());
+
+  convert_bf_simd(x.data(), (float*)z.data(), scale, x.size());
 }
 
 void srsran::srsvec::convert(span<const cf_t> x, float scale, span<int16_t> z)
