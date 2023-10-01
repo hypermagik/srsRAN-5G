@@ -79,6 +79,10 @@ inline bool is_simd_addr_aligned(const void* addr, uintptr_t mask)
 #endif /* HAVE_AVX */
 #endif /* HAVE_AVX512 */
 
+#ifdef HAVE_SSE
+#define SIMD_IS_SSE_ALIGNED(PTR) is_simd_addr_aligned(PTR, 0x0f)
+#endif
+
 /* Memory Sizes for Single Floating Point and fixed point */
 #ifdef HAVE_AVX512
 
