@@ -22,6 +22,10 @@
 
 #include "srsran/radio/radio_factory.h"
 
+#ifdef ENABLE_BLADERF
+#include "bladerf/radio_bladerf_impl.h"
+#endif // ENABLE_BLADERF
+
 #ifdef ENABLE_UHD
 #include "uhd/radio_uhd_impl.h"
 #endif // ENABLE_UHD
@@ -42,6 +46,9 @@ struct radio_factory_entry {
 };
 
 static const std::vector<radio_factory_entry> radio_factory_available_factories = {
+#ifdef ENABLE_BLADERF
+    {"bladerf", []() { return std::make_unique<radio_factory_bladerf_impl>(); }},
+#endif // ENABLE_BLADERF
 #ifdef ENABLE_UHD
     {"uhd", []() { return std::make_unique<radio_factory_uhd_impl>(); }},
 #endif // ENABLE_UHD
