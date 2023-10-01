@@ -25,6 +25,12 @@ add_library(srsran_radio STATIC
 set(SRSGNB_RADIO_DEFINITIONS "")
 set(SRSGNB_RADIO_LIBRARIES "")
 
+if (BLADERF_FOUND AND ENABLE_BLADERF)
+    add_subdirectory(bladerf)
+    list(APPEND SRSGNB_RADIO_DEFINITIONS -DENABLE_BLADERF)
+    list(APPEND SRSGNB_RADIO_LIBRARIES srsran_radio_bladerf)
+endif (BLADERF_FOUND AND ENABLE_BLADERF)
+
 if (UHD_FOUND AND ENABLE_UHD)
     add_subdirectory(uhd)
     list(APPEND SRSGNB_RADIO_DEFINITIONS -DENABLE_UHD)
@@ -40,4 +46,4 @@ endif (ZEROMQ_FOUND AND ENABLE_ZEROMQ)
 add_definitions(${SRSGNB_RADIO_DEFINITIONS})
 target_link_libraries(srsran_radio ${SRSGNB_RADIO_LIBRARIES} srslog dl)
 
-add_to_exported_libs(srsran_radio)
+install(TARGETS srsran_radio EXPORT srsran_export)
