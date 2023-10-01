@@ -76,6 +76,7 @@ option(ENABLE_UBSAN_MIN      "Enable clang sanitizer minimal runtime"     OFF)
 option(ENABLE_RTSAN          "Enable clang real-time sanitizer"           OFF)
 option(ENABLE_GCOV           "Enable code coverage"                       OFF)
 option(ENABLE_BACKWARD       "Enable backward"                            ON)
+option(ENABLE_BLADERF        "Enable BladeRF"                             ON)
 option(ENABLE_UHD            "Enable UHD"                                 ON)
 option(ENABLE_ZEROMQ         "Enable ZeroMQ"                              OFF)
 option(ENABLE_FFTW           "Enable FFTW"                                ON)
@@ -328,6 +329,17 @@ endif (BUILD_TESTS)
 
 # Threads
 find_package(Threads REQUIRED)
+
+# BladeRF
+if (ENABLE_BLADERF)
+    find_package(bladeRF)
+    if (BLADERF_FOUND)
+        include_directories(${BLADERF_INCLUDE_DIRS})
+        link_directories(${BLADERF_LIBRARY_DIRS})
+    endif (BLADERF_FOUND)
+else (ENABLE_BLADERF)
+    unset(BLADERF_FOUND CACHE)
+endif (ENABLE_BLADERF)
 
 # UHD
 if (ENABLE_UHD)
