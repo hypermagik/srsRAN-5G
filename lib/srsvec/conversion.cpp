@@ -106,7 +106,7 @@ static inline void convert_if_simd(const int16_t* x, float* z, float scale, unsi
 #ifdef mHAVE_SSE
   __m128 s = _mm_set1_ps(gain);
   if (SIMD_IS_ALIGNED(z)) {
-    for (; i < len - 3; i += 4) {
+    for (; i + 4 <= len; i += 4) {
       __m64* ptr = (__m64*)&x[i];
       __m128 fl  = _mm_cvtpi16_ps(*ptr);
       __m128 v   = _mm_mul_ps(fl, s);
@@ -114,7 +114,7 @@ static inline void convert_if_simd(const int16_t* x, float* z, float scale, unsi
       _mm_store_ps(&z[i], v);
     }
   } else {
-    for (; i < len - 3; i += 4) {
+    for (; i + 4 <= len; i += 4) {
       __m64* ptr = (__m64*)&x[i];
       __m128 fl  = _mm_cvtpi16_ps(*ptr);
       __m128 v   = _mm_mul_ps(fl, s);
