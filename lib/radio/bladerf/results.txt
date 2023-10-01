@@ -1,0 +1,187 @@
+$ ./gnb -c gnb.yaml cell_cfg --nof_antennas_dl 2 --nof_antennas_ul 2 ru_sdr --otw_format sc16 --srate 21.12
+
+    Creating Tx stream with 2 channels and 16-bit samples at 21.12 MHz...
+    ...16 transfers, 32 buffers, 9216/9144 samples/buffer, 36864 bytes/buffer, 432us/buffer...
+
+    Creating Rx stream with 2 channels and 16-bit samples at 21.12 MHz...
+    ...16 transfers, 32 buffers, 5120/5080 samples/buffer, 20480 bytes/buffer, 240us/buffer...
+
+    RF: Tx interval:  915..1114us, conv:  11.. 16us, send:  10.. 29us, drop: 0 (0.0us), xfers: 1..3 (216..648us) 4..5/xmit, xfers empty in: 0..0us
+    RF: Rx interval:   86.. 154us, conv:   3..  5us, wait:  80..148us, lost: 0 (0.0us), buffs: 0..0 (0..0us), cb:  86..154us
+    RF: Tx interval:  907..1109us, conv:  10.. 16us, send:  10.. 27us, drop: 0 (0.0us), xfers: 1..3 (216..648us) 4..5/xmit, xfers empty in: 0..0us
+    RF: Rx interval:   85.. 154us, conv:   3..  6us, wait:  79..148us, lost: 0 (0.0us), buffs: 0..0 (0..0us), cb:  85..155us
+    RF: Tx interval:  913..1110us, conv:  10.. 16us, send:  10.. 25us, drop: 0 (0.0us), xfers: 1..3 (216..648us) 4..5/xmit, xfers empty in: 0..0us
+    RF: Rx interval:   85.. 154us, conv:   3..  6us, wait:  79..148us, lost: 0 (0.0us), buffs: 0..0 (0..0us), cb:  85..155us
+    RF: Tx interval:  915..1109us, conv:  10.. 16us, send:  10.. 25us, drop: 0 (0.0us), xfers: 1..3 (216..648us) 4..5/xmit, xfers empty in: 0..0us
+    RF: Rx interval:   86.. 154us, conv:   3..  6us, wait:  79..148us, lost: 0 (0.0us), buffs: 0..0 (0..0us), cb:  86..154us
+    RF: Tx interval:  914..1110us, conv:  10.. 16us, send:  10.. 27us, drop: 0 (0.0us), xfers: 1..3 (216..648us) 4..5/xmit, xfers empty in: 0..0us
+    RF: Rx interval:   85.. 155us, conv:   3..  6us, wait:  79..149us, lost: 0 (0.0us), buffs: 0..0 (0..0us), cb:  85..155us
+
+$ ./gnb -c gnb.yaml cell_cfg --nof_antennas_dl 2 --nof_antennas_ul 2 ru_sdr --otw_format sc16 --srate 23.04
+
+    Creating Tx stream with 2 channels and 16-bit samples at 23.04 MHz...
+    ...16 transfers, 32 buffers, 9216/9144 samples/buffer, 36864 bytes/buffer, 396us/buffer...
+
+    Creating Rx stream with 2 channels and 16-bit samples at 23.04 MHz...
+    ...16 transfers, 32 buffers, 5120/5080 samples/buffer, 20480 bytes/buffer, 220us/buffer...
+
+    RF: Tx interval:  987..1105us, conv:   7..  9us, send:  13.. 19us, drop: 17233920 (374000.0us), xfers: 0..3 (0..594us) 5..6/xmit, xfers empty in: 1354..3904us
+    RF: Rx interval:   56.. 145us, conv:   4..  8us, wait:  49..138us, lost: 0 (0.0us), buffs: 0..0 (0..0us), cb:  56..145us
+    Late: 0; Underflow: 557; Overflow: 0;
+    RF: Tx interval:  989..1106us, conv:   7..  8us, send:  13.. 20us, drop: 17233920 (374000.0us), xfers: 0..4 (0..792us) 5..6/xmit, xfers empty in: 1342..3937us
+    RF: Rx interval:   57.. 155us, conv:   4..  8us, wait:  50..149us, lost: 0 (0.0us), buffs: 0..0 (0..0us), cb:  57..156us
+    Late: 0; Underflow: 550; Overflow: 0;
+
+$ ./gnb -c gnb.yaml cell_cfg --nof_antennas_dl 2 --nof_antennas_ul 1 ru_sdr --otw_format sc16 --srate 23.04
+
+    Creating Tx stream with 2 channels and 16-bit samples at 23.04 MHz...
+    ...16 transfers, 32 buffers, 9216/9144 samples/buffer, 36864 bytes/buffer, 396us/buffer...
+
+    Creating Rx stream with 1 channels and 16-bit samples at 23.04 MHz...
+    ...16 transfers, 32 buffers, 3072/3048 samples/buffer, 12288 bytes/buffer, 132us/buffer...
+
+    RF: Tx interval:  869..1103us, conv:  12.. 16us, send:  15.. 31us, drop: 0 (0.0us), xfers: 2..3 (396..594us) 5..6/xmit, xfers empty in: 0..0us
+    RF: Rx interval:   99.. 165us, conv:   1..  2us, wait:  96..162us, lost: 0 (0.0us), buffs: 0..0 (0..0us), cb:  99..165us
+    RF: Tx interval:  866..1104us, conv:  12.. 16us, send:  15.. 32us, drop: 0 (0.0us), xfers: 2..3 (396..594us) 5..6/xmit, xfers empty in: 0..0us
+    RF: Rx interval:   97.. 169us, conv:   1..  3us, wait:  94..166us, lost: 0 (0.0us), buffs: 0..0 (0..0us), cb:  97..169us
+    RF: Tx interval:  872..1100us, conv:  12.. 17us, send:  15.. 31us, drop: 0 (0.0us), xfers: 2..3 (396..594us) 5..6/xmit, xfers empty in: 0..0us
+    RF: Rx interval:  104.. 161us, conv:   1..  4us, wait: 101..158us, lost: 0 (0.0us), buffs: 0..0 (0..0us), cb: 103..161us
+    RF: Tx interval:  871..1102us, conv:  12.. 19us, send:  15.. 36us, drop: 0 (0.0us), xfers: 2..3 (396..594us) 5..6/xmit, xfers empty in: 0..0us
+    RF: Rx interval:   96.. 169us, conv:   1..  4us, wait:  93..166us, lost: 0 (0.0us), buffs: 0..0 (0..0us), cb:  96..169us
+    RF: Tx interval:  869..1105us, conv:  12.. 18us, send:  15.. 32us, drop: 0 (0.0us), xfers: 2..3 (396..594us) 5..6/xmit, xfers empty in: 0..0us
+    RF: Rx interval:  102.. 160us, conv:   1..  3us, wait: 100..158us, lost: 0 (0.0us), buffs: 0..0 (0..0us), cb: 102..161us
+
+
+$ ./gnb -c gnb.yaml cell_cfg --nof_antennas_dl 2 --nof_antennas_ul 1 ru_sdr --otw_format sc16 --srate 24.96
+
+    Creating Tx stream with 2 channels and 16-bit samples at 24.96 MHz...
+    ...16 transfers, 32 buffers, 10240/10160 samples/buffer, 40960 bytes/buffer, 407us/buffer...
+
+    Creating Rx stream with 1 channels and 16-bit samples at 24.96 MHz...
+    ...16 transfers, 32 buffers, 3072/3048 samples/buffer, 12288 bytes/buffer, 122us/buffer...
+
+    RF: Rx interval:   86.. 160us, conv:   2..  4us, wait:  81..155us, lost: 0 (0.0us), buffs: 0..0 (0..0us), cb:  85..160us
+    RF: Tx interval:  925..1150us, conv:   7.. 14us, send:  11.. 27us, drop: 18071040 (362000.0us), xfers: 0..5 (0..1017us) 4..5/xmit, xfers empty in: 1322..24671us
+    Late: 0; Underflow: 494; Overflow: 0;
+    RF: Rx interval:   84.. 162us, conv:   2..  4us, wait:  79..157us, lost: 0 (0.0us), buffs: 0..0 (0..0us), cb:  84..162us
+    RF: Tx interval:  917..1137us, conv:   7.. 14us, send:  12.. 25us, drop: 17946240 (359500.0us), xfers: 0..5 (0..1017us) 4..5/xmit, xfers empty in: 1304..27841us
+    Late: 0; Underflow: 470; Overflow: 0;
+
+$ ./gnb -c gnb.yaml cell_cfg --nof_antennas_dl 1 --nof_antennas_ul 1 ru_sdr --otw_format sc16 --srate 42.24
+
+    Creating Tx stream with 1 channels and 16-bit samples at 42.24 MHz...
+    ...16 transfers, 32 buffers, 9216/9144 samples/buffer, 36864 bytes/buffer, 216us/buffer...
+
+    Creating Rx stream with 1 channels and 16-bit samples at 42.24 MHz...
+    ...16 transfers, 32 buffers, 5120/5080 samples/buffer, 20480 bytes/buffer, 120us/buffer...
+
+    RF: Tx interval:  907..1135us, conv:  10.. 14us, send:  13.. 34us, drop: 0 (0.0us), xfers: 1..3 (216..648us) 4..5/xmit, xfers empty in: 0..0us
+    RF: Rx interval:   84.. 154us, conv:   3..  6us, wait:  79..148us, lost: 0 (0.0us), buffs: 0..0 (0..0us), cb:  85..154us
+    RF: Tx interval:  903..1135us, conv:  10.. 17us, send:  13.. 37us, drop: 0 (0.0us), xfers: 1..3 (216..648us) 4..5/xmit, xfers empty in: 0..0us
+    RF: Rx interval:   86.. 155us, conv:   3..  6us, wait:  80..149us, lost: 0 (0.0us), buffs: 0..0 (0..0us), cb:  86..155us
+    RF: Tx interval:  894..1136us, conv:  10.. 18us, send:  13.. 36us, drop: 0 (0.0us), xfers: 1..3 (216..648us) 4..5/xmit, xfers empty in: 0..0us
+    RF: Rx interval:   84.. 155us, conv:   3..  7us, wait:  79..149us, lost: 0 (0.0us), buffs: 0..0 (0..0us), cb:  85..154us
+    RF: Tx interval:  907..1135us, conv:  10.. 17us, send:  13.. 32us, drop: 0 (0.0us), xfers: 1..3 (216..648us) 4..5/xmit, xfers empty in: 0..0us
+    RF: Rx interval:   85.. 154us, conv:   3..  6us, wait:  79..149us, lost: 0 (0.0us), buffs: 0..0 (0..0us), cb:  84..154us
+    RF: Tx interval:  909..1137us, conv:  10.. 13us, send:  13.. 36us, drop: 0 (0.0us), xfers: 1..3 (216..648us) 4..5/xmit, xfers empty in: 0..0us
+    RF: Rx interval:   85.. 155us, conv:   3..  7us, wait:  79..150us, lost: 0 (0.0us), buffs: 0..0 (0..0us), cb:  84..155us
+
+$ ./gnb -c gnb.yaml cell_cfg --nof_antennas_dl 1 --nof_antennas_ul 1 ru_sdr --otw_format sc16 --srate 44.16
+    Creating Tx stream with 1 channels and 16-bit samples at 44.16 MHz...
+    ...16 transfers, 32 buffers, 9216/9144 samples/buffer, 36864 bytes/buffer, 207us/buffer...
+
+    Creating Rx stream with 1 channels and 16-bit samples at 44.16 MHz...
+    ...16 transfers, 32 buffers, 5120/5080 samples/buffer, 20480 bytes/buffer, 115us/buffer...
+
+    RF: Rx interval:   75.. 148us, conv:   3.. 10us, wait:  69..141us, lost: 0 (0.0us), buffs: 0..0 (0..0us), cb:  75..148us
+    RF: Tx interval:  762..1199us, conv:   4.. 12us, send:  10.. 22us, drop: 33473280 (758000.0us), xfers: 0..3 (0..621us) 4..5/xmit, xfers empty in: 1151..4640us
+    Late: 0; Underflow: 471; Overflow: 0;
+    RF: Rx interval:   80.. 153us, conv:   3..  6us, wait:  73..148us, lost: 0 (0.0us), buffs: 0..0 (0..0us), cb:  79..154us
+    RF: Tx interval:  760..1200us, conv:   4..  8us, send:  11.. 18us, drop: 33561600 (760000.0us), xfers: 0..0 (0..0us) 4..5/xmit, xfers empty in: 1174..1637us
+    Late: 0; Underflow: 468; Overflow: 0;
+
+$ ./gnb -c gnb.yaml cell_cfg --nof_antennas_dl 2 --nof_antennas_ul 1 ru_sdr --otw_format sc8 --srate 38.4
+
+    Creating Tx stream with 2 channels and 8-bit samples at 38.4 MHz...
+    ...16 transfers, 32 buffers, 15360/15240 samples/buffer, 30720 bytes/buffer, 396us/buffer...
+
+    Creating Rx stream with 1 channels and 8-bit samples at 38.4 MHz...
+    ...16 transfers, 32 buffers, 4096/4064 samples/buffer, 8192 bytes/buffer, 105us/buffer...
+
+    RF: Tx interval:  874..1113us, conv:  19.. 30us, send:  14.. 32us, drop: 0 (0.0us), xfers: 1..3 (198..594us) 5..6/xmit, xfers empty in: 0..0us
+    RF: Rx interval:   76.. 136us, conv:   2..  6us, wait:  72..131us, lost: 0 (0.0us), buffs: 0..0 (0..0us), cb:  76..135us
+    RF: Tx interval:  885..1113us, conv:  19.. 24us, send:  14.. 36us, drop: 0 (0.0us), xfers: 1..3 (198..594us) 5..6/xmit, xfers empty in: 0..0us
+    RF: Rx interval:   75.. 136us, conv:   2..  6us, wait:  70..131us, lost: 0 (0.0us), buffs: 0..0 (0..0us), cb:  75..136us
+    RF: Tx interval:  876..1114us, conv:  19.. 29us, send:  13.. 34us, drop: 0 (0.0us), xfers: 1..3 (198..594us) 5..6/xmit, xfers empty in: 0..0us
+    RF: Rx interval:   76.. 136us, conv:   2..  6us, wait:  71..131us, lost: 0 (0.0us), buffs: 0..0 (0..0us), cb:  75..136us
+    RF: Tx interval:  874..1108us, conv:  19.. 30us, send:  14.. 34us, drop: 0 (0.0us), xfers: 1..3 (198..594us) 5..6/xmit, xfers empty in: 0..0us
+    RF: Rx interval:   75.. 137us, conv:   2..  7us, wait:  70..132us, lost: 0 (0.0us), buffs: 0..0 (0..0us), cb:  76..136us
+    RF: Tx interval:  884..1113us, conv:  19.. 30us, send:  14.. 34us, drop: 0 (0.0us), xfers: 1..3 (198..594us) 5..6/xmit, xfers empty in: 0..0us
+    RF: Rx interval:   72.. 139us, conv:   2..  6us, wait:  68..134us, lost: 0 (0.0us), buffs: 0..0 (0..0us), cb:  73..138us
+
+$ ./gnb -c gnb.yaml cell_cfg --nof_antennas_dl 2 --nof_antennas_ul 1 ru_sdr --otw_format sc8 --srate 40.32
+
+    Creating Tx stream with 2 channels and 8-bit samples at 40.32 MHz...
+    ...16 transfers, 32 buffers, 16384/16256 samples/buffer, 32768 bytes/buffer, 403us/buffer...
+
+    Creating Rx stream with 1 channels and 8-bit samples at 40.32 MHz...
+    ...16 transfers, 32 buffers, 4096/4064 samples/buffer, 8192 bytes/buffer, 100us/buffer...
+
+    RF: Rx interval:   73.. 135us, conv:   2..  5us, wait:  67..130us, lost: 0 (0.0us), buffs: 0..0 (0..0us), cb:  73..135us
+    RF: Tx interval:  835..1045us, conv:  10.. 18us, send:  12.. 29us, drop: 13587840 (168500.0us), xfers: 0..3 (0..604us) 4..5/xmit, xfers empty in: 1267..1413464us
+    Late: 0; Underflow: 201; Overflow: 0;
+    RF: Rx interval:   71.. 129us, conv:   2..  5us, wait:  66..123us, lost: 0 (0.0us), buffs: 0..0 (0..0us), cb:  72..129us
+    RF: Tx interval:  836..1045us, conv:  10.. 16us, send:  13.. 29us, drop: 11088000 (137500.0us), xfers: 0..3 (0..604us) 4..5/xmit, xfers empty in: 1230..965498us
+    Late: 0; Underflow: 225; Overflow: 0;
+
+$ ./gnb -c gnb.yaml cell_cfg --nof_antennas_dl 2 --nof_antennas_ul 1 ru_sdr --otw_format sc8 --srate 48
+
+    Creating Tx stream with 2 channels and 8-bit samples at 48.0 MHz...
+    ...16 transfers, 32 buffers, 19456/19304 samples/buffer, 38912 bytes/buffer, 402us/buffer...
+
+    Creating Rx stream with 1 channels and 8-bit samples at 48.0 MHz...
+    ...16 transfers, 32 buffers, 5120/5080 samples/buffer, 10240 bytes/buffer, 105us/buffer...
+
+    RF: Tx interval:  855..1122us, conv:  24.. 26us, send:  12.. 33us, drop: 0 (0.0us), xfers: 1..3 (201..603us) 4..5/xmit, xfers empty in: 0..0us
+    RF: Rx interval:   70.. 143us, conv:   3.. 11us, wait:  65..137us, lost: 0 (0.0us), buffs: 0..0 (0..0us), cb:  71..143us
+    RF: Tx interval:  856..1121us, conv:  24.. 26us, send:  12.. 35us, drop: 0 (0.0us), xfers: 1..3 (201..603us) 4..5/xmit, xfers empty in: 0..0us
+    RF: Rx interval:   71.. 143us, conv:   3.. 13us, wait:  65..136us, lost: 0 (0.0us), buffs: 0..0 (0..0us), cb:  70..143us
+    RF: Tx interval:  855..1124us, conv:  24.. 26us, send:  11.. 36us, drop: 0 (0.0us), xfers: 1..3 (201..603us) 4..5/xmit, xfers empty in: 0..0us
+    RF: Rx interval:   70.. 143us, conv:   3.. 12us, wait:  64..138us, lost: 0 (0.0us), buffs: 0..0 (0..0us), cb:  69..143us
+    RF: Tx interval:  857..1128us, conv:  24.. 26us, send:  11.. 35us, drop: 0 (0.0us), xfers: 1..3 (201..603us) 4..5/xmit, xfers empty in: 0..0us
+    RF: Rx interval:   67.. 142us, conv:   3.. 12us, wait:  61..137us, lost: 0 (0.0us), buffs: 0..0 (0..0us), cb:  67..142us
+    RF: Tx interval:  855..1121us, conv:  24.. 26us, send:  12.. 34us, drop: 0 (0.0us), xfers: 1..3 (201..603us) 4..5/xmit, xfers empty in: 0..0us
+    RF: Rx interval:   68.. 143us, conv:   3.. 11us, wait:  62..137us, lost: 0 (0.0us), buffs: 0..0 (0..0us), cb:  68..143us
+
+$ ./gnb -c gnb.yaml cell_cfg --nof_antennas_dl 2 --nof_antennas_ul 1 ru_sdr --otw_format sc8 --srate 49.92
+
+    Creating Tx stream with 2 channels and 8-bit samples at 49.92 MHz...
+    ...16 transfers, 32 buffers, 20480/20320 samples/buffer, 40960 bytes/buffer, 407us/buffer...
+
+    Creating Rx stream with 1 channels and 8-bit samples at 49.92 MHz...
+    ...16 transfers, 32 buffers, 5120/5080 samples/buffer, 10240 bytes/buffer, 101us/buffer...
+
+    RF: Rx interval:   65.. 142us, conv:   3..  7us, wait:  59..136us, lost: 0 (0.0us), buffs: 0..0 (0..0us), cb:  65..142us
+    RF: Tx interval:  852..1138us, conv:  25.. 29us, send:  10.. 28us, drop: 35942400 (360000.0us), xfers: 0..4 (0..814us) 4..5/xmit, xfers empty in: 1228..23826us
+    Late: 0; Underflow: 496; Overflow: 0;
+    RF: Rx interval:   64.. 141us, conv:   3..  8us, wait:  58..135us, lost: 0 (0.0us), buffs: 0..0 (0..0us), cb:  63..142us
+    RF: Tx interval:  801..1138us, conv:  25.. 29us, send:   9.. 23us, drop: 36142080 (362000.0us), xfers: 0..4 (0..814us) 4..5/xmit, xfers empty in: 1179..22907us
+    Late: 0; Underflow: 502; Overflow: 0;
+
+$ ./gnb -c gnb.yaml cell_cfg --nof_antennas_dl 1 --nof_antennas_ul 1 ru_sdr --otw_format sc8 --srate 61.44
+
+    Creating Tx stream with 1 channels and 8-bit samples at 61.44 MHz...
+    ...16 transfers, 32 buffers, 12288/12192 samples/buffer, 24576 bytes/buffer, 198us/buffer...
+    Creating Rx stream with 1 channels and 8-bit samples at 61.44 MHz...
+    ...16 transfers, 32 buffers, 6144/6096 samples/buffer, 12288 bytes/buffer, 99us/buffer...
+
+    RF: Tx interval:  949..1146us, conv:  15.. 27us, send:   9.. 23us, drop: 0 (0.0us), xfers: 1..2 (198..396us) 5..6/xmit, xfers empty in: 0..0us
+    RF: Rx interval:   72.. 126us, conv:   2..  5us, wait:  68..122us, lost: 0 (0.0us), buffs: 0..0 (0..0us), cb:  72..125us
+    RF: Tx interval:  949..1142us, conv:  15.. 51us, send:   9.. 35us, drop: 0 (0.0us), xfers: 1..2 (198..396us) 5..6/xmit, xfers empty in: 0..0us
+    RF: Rx interval:   70.. 127us, conv:   2..  4us, wait:  66..123us, lost: 0 (0.0us), buffs: 0..0 (0..0us), cb:  70..127us
+    RF: Tx interval:  907..1146us, conv:  15.. 27us, send:   9.. 27us, drop: 0 (0.0us), xfers: 1..2 (198..396us) 5..6/xmit, xfers empty in: 0..0us
+    RF: Rx interval:   69.. 130us, conv:   2..  5us, wait:  65..126us, lost: 0 (0.0us), buffs: 0..0 (0..0us), cb:  68..131us
+    RF: Tx interval:  948..1143us, conv:  15.. 32us, send:   9.. 30us, drop: 0 (0.0us), xfers: 1..2 (198..396us) 5..6/xmit, xfers empty in: 0..0us
+    RF: Rx interval:   66.. 129us, conv:   2..  4us, wait:  62..126us, lost: 0 (0.0us), buffs: 0..0 (0..0us), cb:  66..129us
+    RF: Tx interval:  948..1148us, conv:  15.. 32us, send:   9.. 27us, drop: 0 (0.0us), xfers: 1..2 (198..396us) 5..6/xmit, xfers empty in: 0..0us
+    RF: Rx interval:   67.. 132us, conv:   2..  4us, wait:  63..128us, lost: 0 (0.0us), buffs: 0..0 (0..0us), cb:  68..132us
