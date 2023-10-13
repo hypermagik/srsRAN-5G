@@ -98,7 +98,7 @@ void backend_worker::do_work()
 {
   /// This period defines the time the worker will sleep while waiting for new entries. This is required to check the
   /// termination variable periodically.
-  constexpr std::chrono::microseconds sleep_period{100};
+  constexpr std::chrono::milliseconds sleep_period{1};
 
   while (running_flag) {
     auto item = queue.try_pop();
