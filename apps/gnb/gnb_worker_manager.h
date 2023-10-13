@@ -48,10 +48,25 @@ public:
         nof_cores_for_non_prio_threads < compute_host_nof_hardware_threads(),
         "Number of CPU cores reserved for non-priority tasks cannot exceed number of CPU cores in the machine");
 
-    for (unsigned bit = 0; bit != nof_cores_for_non_prio_threads; ++bit) {
-      non_prio_thread_mask.set(bit);
+    cpu_set_t cpuset;
+    if (sched_getaffinity(0, sizeof(cpuset), &cpuset) == 0) {
+      for (unsigned i = 0; i < cpu_bitset.size(); i++) {
+        if (!CPU_ISSET(i, &cpuset)) {
+          cpu_bitset.set(i);
+        }
+      }
     }
-    cpu_bitset.fill(0, nof_cores_for_non_prio_threads, true);
+
+    for (unsigned bit = 0; bit != nof_cores_for_non_prio_threads; ++bit) {
+      int pos = cpu_bitset.find_lowest(0, cpu_bitset.size(), false);
+      if (pos == -1) {
+        fmt::print("Could not reserve core for non-priority threads\n");
+        break;
+      }
+
+      cpu_bitset.set(pos);
+      non_prio_thread_mask.set(pos);
+    }
   }
 
   /// Default constructor.
@@ -141,6 +156,9 @@ struct worker_manager {
   // Gets the DU-low downlink executors.
   void get_du_low_dl_executors(std::vector<task_executor*>& executors, unsigned sector_id) const;
 
+  /// Assign a CPU affinity bitmask to a given worker, based on its priority.
+  os_sched_affinity_bitmask calculate_affinity_mask(const std::string& worker_name, os_thread_realtime_priority prio);
+
 private:
   struct du_high_executor_storage {
     std::unique_ptr<du_high_executor_mapper> du_high_exec_mapper;
@@ -192,9 +210,6 @@ private:
 
   /// Helper method that creates the Open Fronthaul executors.
   void create_ofh_executors(span<const cell_appconfig> cells, bool is_downlink_parallelized);
-
-  /// Assign a CPU affinity bitmask to a given worker, based on its priority.
-  os_sched_affinity_bitmask calculate_affinity_mask(const std::string& worker_name, os_thread_realtime_priority prio);
 };
 
 } // namespace srsran

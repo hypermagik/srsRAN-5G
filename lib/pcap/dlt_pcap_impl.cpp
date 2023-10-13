@@ -28,8 +28,10 @@ namespace srsran {
 
 constexpr uint16_t pcap_dlt_max_pdu_len = 9000;
 
-dlt_pcap_impl::dlt_pcap_impl(unsigned dlt_, const std::string& layer_name_) :
-  dlt(dlt_), layer_name(layer_name_), worker(layer_name_ + "-PCAP", 1024)
+dlt_pcap_impl::dlt_pcap_impl(unsigned dlt_, const std::string& layer_name_, os_sched_affinity_bitmask affinity) :
+  dlt(dlt_),
+  layer_name(layer_name_),
+  worker(layer_name_ + "-PCAP", 1024, os_thread_realtime_priority::no_realtime(), affinity)
 {
   tmp_mem.resize(pcap_dlt_max_pdu_len);
 }

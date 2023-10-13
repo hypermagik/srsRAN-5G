@@ -30,10 +30,6 @@ using namespace srsran;
 
 size_t srsran::compute_host_nof_hardware_threads()
 {
-  cpu_set_t cpuset;
-  if (sched_getaffinity(0, sizeof(cpuset), &cpuset) == 0) {
-    return std::max(1, CPU_COUNT(&cpuset));
-  }
   return std::max(1U, std::thread::hardware_concurrency());
 }
 

@@ -31,8 +31,9 @@
 namespace srsran {
 
 struct io_broker_config {
-  std::string                 thread_name = "io_broker_epoll";
-  os_thread_realtime_priority thread_prio = os_thread_realtime_priority::no_realtime();
+  std::string                 thread_name     = "io_broker_epoll";
+  os_thread_realtime_priority thread_prio     = os_thread_realtime_priority::no_realtime();
+  os_sched_affinity_bitmask   thread_affinity = {};
 };
 
 /// @brief Implementation of an IO broker using epoll.

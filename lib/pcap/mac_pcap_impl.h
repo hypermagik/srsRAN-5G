@@ -43,7 +43,7 @@ constexpr uint8_t     MAC_NR_HARQID                  = 0x06;
 class mac_pcap_impl final : public mac_pcap
 {
 public:
-  mac_pcap_impl();
+  mac_pcap_impl(os_sched_affinity_bitmask affinity = {});
   ~mac_pcap_impl() override;
   mac_pcap_impl(const mac_pcap_impl& other)            = delete;
   mac_pcap_impl& operator=(const mac_pcap_impl& other) = delete;

@@ -25,11 +25,11 @@
 
 using namespace srsran;
 
-std::unique_ptr<io_broker> srsran::create_io_broker(io_broker_type type)
+std::unique_ptr<io_broker> srsran::create_io_broker(io_broker_type type, os_sched_affinity_bitmask affinity)
 {
   switch (type) {
     case io_broker_type::epoll:
-      return std::make_unique<io_broker_epoll>(io_broker_config());
+      return std::make_unique<io_broker_epoll>(io_broker_config{.thread_affinity = affinity});
     default:
       srsran_terminate("IO broker type not supported");
   }

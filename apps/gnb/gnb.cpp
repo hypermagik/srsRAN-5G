@@ -335,34 +335,36 @@ int main(int argc, char** argv)
   check_cpu_governor(gnb_logger);
   check_drm_kms_polling(gnb_logger);
 
+  worker_manager workers{gnb_cfg};
+  const auto     pcap_affinity =
+      workers.calculate_affinity_mask("pcap_threads", os_thread_realtime_priority::no_realtime());
+
   // Set layer-specific pcap options.
-  std::unique_ptr<dlt_pcap> ngap_p = std::make_unique<dlt_pcap_impl>(PCAP_NGAP_DLT, "NGAP");
+  std::unique_ptr<dlt_pcap> ngap_p = std::make_unique<dlt_pcap_impl>(PCAP_NGAP_DLT, "NGAP", pcap_affinity);
   if (gnb_cfg.pcap_cfg.ngap.enabled) {
     ngap_p->open(gnb_cfg.pcap_cfg.ngap.filename.c_str());
   }
-  std::unique_ptr<dlt_pcap> e1ap_p = std::make_unique<dlt_pcap_impl>(PCAP_E1AP_DLT, "E1AP");
+  std::unique_ptr<dlt_pcap> e1ap_p = std::make_unique<dlt_pcap_impl>(PCAP_E1AP_DLT, "E1AP", pcap_affinity);
   if (gnb_cfg.pcap_cfg.e1ap.enabled) {
     e1ap_p->open(gnb_cfg.pcap_cfg.e1ap.filename.c_str());
   }
-  std::unique_ptr<dlt_pcap> f1ap_p = std::make_unique<dlt_pcap_impl>(PCAP_F1AP_DLT, "F1AP");
+  std::unique_ptr<dlt_pcap> f1ap_p = std::make_unique<dlt_pcap_impl>(PCAP_F1AP_DLT, "F1AP", pcap_affinity);
   if (gnb_cfg.pcap_cfg.f1ap.enabled) {
     f1ap_p->open(gnb_cfg.pcap_cfg.f1ap.filename.c_str());
   }
-  std::unique_ptr<dlt_pcap> e2ap_p = std::make_unique<dlt_pcap_impl>(PCAP_E2AP_DLT, "E2AP");
+  std::unique_ptr<dlt_pcap> e2ap_p = std::make_unique<dlt_pcap_impl>(PCAP_E2AP_DLT, "E2AP", pcap_affinity);
   if (gnb_cfg.pcap_cfg.e2ap.enabled) {
     e2ap_p->open(gnb_cfg.pcap_cfg.e2ap.filename.c_str());
   }
-  std::unique_ptr<dlt_pcap> gtpu_p = std::make_unique<dlt_pcap_impl>(PCAP_GTPU_DLT, "GTPU");
+  std::unique_ptr<dlt_pcap> gtpu_p = std::make_unique<dlt_pcap_impl>(PCAP_GTPU_DLT, "GTPU", pcap_affinity);
   if (gnb_cfg.pcap_cfg.gtpu.enabled) {
     gtpu_p->open(gnb_cfg.pcap_cfg.gtpu.filename);
   }
 
-  std::unique_ptr<mac_pcap> mac_p = std::make_unique<mac_pcap_impl>();
+  std::unique_ptr<mac_pcap> mac_p = std::make_unique<mac_pcap_impl>(pcap_affinity);
   if (gnb_cfg.pcap_cfg.mac.enabled) {
     mac_p->open(gnb_cfg.pcap_cfg.mac.filename.c_str());
   }
-
-  worker_manager workers{gnb_cfg};
 
   f1c_gateway_local_connector  f1c_gw{*f1ap_p};
   e1ap_gateway_local_connector e1ap_gw{*e1ap_p};
@@ -381,7 +383,9 @@ int main(int argc, char** argv)
   std::unique_ptr<f1u_local_connector> f1u_conn = std::make_unique<f1u_local_connector>();
 
   // Create IO broker.
-  std::unique_ptr<io_broker> epoll_broker = create_io_broker(io_broker_type::epoll);
+  const auto io_broker_affinity =
+      workers.calculate_affinity_mask("io_broker", os_thread_realtime_priority::no_realtime());
+  std::unique_ptr<io_broker> epoll_broker = create_io_broker(io_broker_type::epoll, io_broker_affinity);
 
   // Create console helper object for commands and metrics printing.
   gnb_console_helper console(*epoll_broker);
@@ -395,7 +399,8 @@ int main(int argc, char** argv)
 
   // Create NGAP adapter.
   std::unique_ptr<srsran::srs_cu_cp::ngap_network_adapter> ngap_adapter =
-      std::make_unique<srsran::srs_cu_cp::ngap_network_adapter>(*epoll_broker, *ngap_p, app_timers, *workers.cu_cp_exec);
+      std::make_unique<srsran::srs_cu_cp::ngap_network_adapter>(
+          *epoll_broker, *ngap_p, app_timers, *workers.cu_cp_exec);
 
   // Create SCTP network adapter.
   std::unique_ptr<sctp_network_gateway> sctp_gateway = {};
