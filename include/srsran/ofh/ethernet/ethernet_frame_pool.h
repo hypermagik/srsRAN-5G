@@ -294,9 +294,6 @@ public:
     // Clear buffers with DL Control-Plane messages.
     frame_pool_context context(slot_point, 0, ofh::message_type::control_plane, ofh::data_direction::downlink);
     cp_entry.clear_buffers(context);
-    // Clear buffers with UL Control-Plane messages.
-    context.direction = ofh::data_direction::uplink;
-    cp_entry.clear_buffers(context);
 
     // Clear buffers with User-Plane messages.
     context.type      = ofh::message_type::user_plane;
