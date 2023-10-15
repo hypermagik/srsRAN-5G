@@ -80,7 +80,7 @@ void iq_compression_bfp_avx512::compress(span<compressed_prb>         output,
   unsigned sample_idx = 0, rb = 0;
 
   // With 3 AVX512 registers we can process 4 PRBs at a time (48 16bit IQ pairs).
-  for (size_t rb_index_end = (output.size() / 4) * 4; rb != rb_index_end; rb += 4) {
+  for (size_t rb_index_end = (output.size() / 4) * 4; rb < rb_index_end; rb += 4) {
     // Load input.
     __m512i r0_epi16 = loadu_epi16_avx512(&input_quantized[sample_idx]);
     __m512i r1_epi16 = loadu_epi16_avx512(&input_quantized[sample_idx + AVX512_REG_SIZE]);
@@ -115,7 +115,7 @@ void iq_compression_bfp_avx512::compress(span<compressed_prb>         output,
 
   // Process the remaining PRBs (one PRB at a time),
   // except the last one - to avoid reading behind the input data memory.
-  for (size_t rb_index_end = output.size() - 1; rb != rb_index_end; ++rb) {
+  for (size_t rb_index_end = output.size() - 1; rb < rb_index_end; ++rb) {
     const __m512i AVX512_ZERO = _mm512_set1_epi16(0);
     __m512i       rb_epi16    = loadu_epi16_avx512(&input_quantized[sample_idx]);
 
@@ -132,7 +132,7 @@ void iq_compression_bfp_avx512::compress(span<compressed_prb>         output,
   }
 
   // Use generic implementation for the remaining resource blocks.
-  for (size_t rb_index_end = output.size(); rb != rb_index_end; ++rb) {
+  for (size_t rb_index_end = output.size(); rb < rb_index_end; ++rb) {
     const auto* start_it = input_quantized.begin() + sample_idx;
     compress_prb_generic(output[rb], {start_it, NOF_SAMPLES_PER_PRB}, params.data_width);
     sample_idx += NOF_SAMPLES_PER_PRB;
