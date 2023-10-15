@@ -58,6 +58,14 @@ find_package_handle_standard_args(DPDK DEFAULT_MSG DPDK_INCLUDE_DIRS CHECK_LIBRA
 if(DPDK_FOUND)
     set(DPDK_LIBRARIES
             -Wl,--whole-archive ${CHECK_LIBRARIES} -lpthread -lnuma -ldl -Wl,--no-whole-archive)
+
+    find_path(DPDK_EAL_INCLUDE_DIR
+            NAMES         rte_eal.h
+            PATH_SUFFIXES dpdk
+            HINTS         /usr/include
+            )
+
+    set(DPDK_INCLUDE_DIRS ${DPDK_EAL_INCLUDE_DIR} ${DPDK_INCLUDE_DIRS})
 endif(DPDK_FOUND)
 
 message(STATUS "DPDK LIBRARIES: " ${DPDK_LIBRARIES})
