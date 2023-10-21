@@ -35,6 +35,14 @@ static constexpr unsigned MAX_BUFFER_SIZE = 9600;
 void dpdk_receiver_impl::start()
 {
   logger.info("Starting the DPDK ethernet frame receiver");
+
+  ::rte_eth_dev_info dev_info;
+
+  int ret = ::rte_eth_dev_info_get(port_id, &dev_info);
+  if (ret == 0) {
+    nb_rx_queues = dev_info.nb_rx_queues;
+  }
+
   if (not executor.defer([this]() { receive_loop(); })) {
     report_error("Unable to start the OFH DPDK ethernet frame receiver");
   }
@@ -48,10 +56,17 @@ void dpdk_receiver_impl::stop()
 
 void dpdk_receiver_impl::receive_loop()
 {
-  receive();
+  unsigned num_frames = 0;
+  for (unsigned queue_id = 0; queue_id < nb_rx_queues; queue_id++) {
+    num_frames += receive(queue_id);
+  }
 
   if (is_stop_requested.load(std::memory_order_relaxed)) {
     return;
+  }
+
+  if (num_frames == 0) {
+    std::this_thread::sleep_for(std::chrono::microseconds(5));
   }
 
   // Retry the task deferring when it fails.
@@ -60,14 +75,10 @@ void dpdk_receiver_impl::receive_loop()
   }
 }
 
-void dpdk_receiver_impl::receive()
+unsigned dpdk_receiver_impl::receive(uint16_t queue_id)
 {
   std::array<::rte_mbuf*, MAX_BURST_SIZE> mbufs;
-  unsigned                                num_frames = ::rte_eth_rx_burst(port_id, 0, mbufs.data(), MAX_BURST_SIZE);
-  if (num_frames == 0) {
-    std::this_thread::sleep_for(std::chrono::microseconds(5));
-    return;
-  }
+  unsigned num_frames = ::rte_eth_rx_burst(port_id, queue_id, mbufs.data(), MAX_BURST_SIZE);
 
   for (auto mbuf : span<::rte_mbuf*>(mbufs.data(), num_frames)) {
     std::array<uint8_t, MAX_BUFFER_SIZE> buffer;
@@ -81,25 +92,23 @@ void dpdk_receiver_impl::receive()
 
     notifier.on_new_frame(span<const uint8_t>(buffer.data(), length));
   }
+
+  return num_frames;
 }
 
 /// Closes an Ethernet port using DPDK.
-static void dpdk_eth_close()
+static void dpdk_eth_close(unsigned portid)
 {
-  unsigned portid;
-  RTE_ETH_FOREACH_DEV(portid)
-  {
-    fmt::print("Closing port {}...", portid);
-    int ret = ::rte_eth_dev_stop(portid);
-    if (ret != 0) {
-      fmt::print("rte_eth_dev_stop: err={}, port={}\n", ret, portid);
-    }
-    ::rte_eth_dev_close(portid);
-    fmt::print(" Done\n");
+  fmt::print("Closing port {}...", portid);
+  int ret = ::rte_eth_dev_stop(portid);
+  if (ret != 0) {
+    fmt::print("rte_eth_dev_stop: err={}, port={}\n", ret, portid);
   }
+  ::rte_eth_dev_close(portid);
+  fmt::print(" Done\n");
 }
 
 dpdk_receiver_impl::~dpdk_receiver_impl()
 {
-  dpdk_eth_close();
+  dpdk_eth_close(port_id);
 }
