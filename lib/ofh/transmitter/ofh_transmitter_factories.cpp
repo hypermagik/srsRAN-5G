@@ -199,7 +199,7 @@ static std::shared_ptr<ether::eth_frame_pool> create_eth_frame_pool(const transm
           ? ofh::create_static_compr_method_ofh_user_plane_packet_builder(logger, *compressor_sel)
           : ofh::create_dynamic_compr_method_ofh_user_plane_packet_builder(logger, *compressor_sel);
 
-  units::bytes headers_size = eth_builder->get_header_size() +
+  units::bytes headers_size = eth_builder->get_header_size(tx_config.tci > 0) +
                               ecpri_builder->get_header_size(ecpri::message_type::iq_data) +
                               uplane_builder->get_header_size(tx_config.dl_compr_params);
 
