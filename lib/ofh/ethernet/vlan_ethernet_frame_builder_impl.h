@@ -32,7 +32,7 @@ class vlan_frame_builder_impl : public vlan_frame_builder
 {
 public:
   // See interface for documentation.
-  units::bytes get_header_size() const override;
+  units::bytes get_header_size(bool with_vlan) const override;
 
   // See interface for documentation.
   void build_vlan_frame(span<uint8_t> buffer, const vlan_frame_params& eth_params) override;
