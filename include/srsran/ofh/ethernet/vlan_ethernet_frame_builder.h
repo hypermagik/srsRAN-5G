@@ -39,7 +39,7 @@ public:
   virtual ~vlan_frame_builder() = default;
 
   /// Returns the VLAN Ethernet header size in bytes.
-  virtual units::bytes get_header_size() const = 0;
+  virtual units::bytes get_header_size(bool with_vlan) const = 0;
 
   /// \brief Builds a VLAN Ethernet frame using the given parameters into \c buffer.
   ///
