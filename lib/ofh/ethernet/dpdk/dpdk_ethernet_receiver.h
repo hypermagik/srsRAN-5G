@@ -55,15 +55,14 @@ private:
   void receive_loop();
 
   /// Receives new Ethernet frames from the socket.
-  ///
-  /// \note This function will block until new frames become available.
-  void receive();
+  unsigned receive(uint16_t queue_id);
 
 private:
   srslog::basic_logger& logger;
   task_executor&        executor;
   frame_notifier&       notifier;
   const unsigned        port_id = 0;
+  unsigned              nb_rx_queues = 1;
   std::atomic<bool>     is_stop_requested{false};
 };
 
