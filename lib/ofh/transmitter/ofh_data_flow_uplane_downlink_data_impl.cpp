@@ -113,7 +113,7 @@ void data_flow_uplane_downlink_data_impl::enqueue_section_type_1_message_symbol_
     const data_flow_uplane_resource_grid_context& context,
     const resource_grid_reader&                   grid)
 {
-  units::bytes headers_size = eth_builder->get_header_size() +
+  units::bytes headers_size = eth_builder->get_header_size(vlan_params) +
                               ecpri_builder->get_header_size(ecpri::message_type::iq_data) +
                               up_builder->get_header_size(compr_params);
 
@@ -163,7 +163,7 @@ unsigned data_flow_uplane_downlink_data_impl::enqueue_section_type_1_message_sym
                                                                                     span<uint8_t>                buffer)
 {
   // Build the Open Fronthaul data message. Only one port supported.
-  units::bytes  ether_header_size = eth_builder->get_header_size();
+  units::bytes  ether_header_size = eth_builder->get_header_size(vlan_params);
   units::bytes  ecpri_hdr_size    = ecpri_builder->get_header_size(ecpri::message_type::iq_data);
   units::bytes  offset            = ether_header_size + ecpri_hdr_size;
   span<uint8_t> ofh_buffer        = span<uint8_t>(buffer).last(buffer.size() - offset.value());
