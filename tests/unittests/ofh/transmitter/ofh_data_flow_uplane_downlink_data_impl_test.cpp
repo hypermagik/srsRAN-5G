@@ -254,7 +254,7 @@ TEST(ofh_data_flow_uplane_downlink_data_impl,
   }
   {
     auto temp = std::make_unique<ether::testing::vlan_frame_builder_spy>();
-    frame_size += temp->get_header_size().value();
+    frame_size += temp->get_header_size(true).value();
     dependencies.eth_builder = std::move(temp);
   }
   {
