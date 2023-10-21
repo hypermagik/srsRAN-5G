@@ -54,21 +54,30 @@ static bool port_init(const gw_config& config, ::rte_mempool* mbuf_pool, unsigne
     return false;
   }
 
+  const bool is_memif = std::string(dev_info.driver_name) == "net_memif";
+
   ::rte_eth_conf port_conf = {};
   if (dev_info.tx_offload_capa & RTE_ETH_TX_OFFLOAD_MBUF_FAST_FREE) {
     port_conf.txmode.offloads |= RTE_ETH_TX_OFFLOAD_MBUF_FAST_FREE;
   }
 
+  const unsigned nb_rx_queues = std::min<unsigned>(dev_info.max_rx_queues, is_memif ? 2 : 1);
+  if (nb_rx_queues != 1) {
+    fmt::print("DPDK device running with {} rx queues.\n", nb_rx_queues);
+  }
+
   // Configure the Ethernet device.
-  if (::rte_eth_dev_configure(port, 1, 1, &port_conf) != 0) {
+  if (::rte_eth_dev_configure(port, nb_rx_queues, 1, &port_conf) != 0) {
     fmt::print("Error configuring eth dev\n");
     return false;
   }
 
   // Configure MTU size.
-  if (::rte_eth_dev_set_mtu(port, 9574) != 0) {
-    fmt::print("Error setting MTU size\n");
-    return false;
+  if (!is_memif) {
+    if (::rte_eth_dev_set_mtu(port, 9574) != 0) {
+      fmt::print("Error setting MTU size\n");
+      return false;
+    }
   }
 
   if (::rte_eth_dev_adjust_nb_rx_tx_desc(port, &nb_rxd, &nb_txd) != 0) {
@@ -76,10 +85,12 @@ static bool port_init(const gw_config& config, ::rte_mempool* mbuf_pool, unsigne
     return false;
   }
 
-  // Allocate and set up 1 RX queue.
-  if (::rte_eth_rx_queue_setup(port, 0, nb_rxd, ::rte_eth_dev_socket_id(port), nullptr, mbuf_pool) < 0) {
-    fmt::print("Error configuring rx queue\n");
-    return false;
+  for (unsigned queue_id = 0; queue_id < nb_rx_queues; queue_id++) {
+    // Allocate and set up RX queue.
+    if (::rte_eth_rx_queue_setup(port, queue_id, nb_rxd, ::rte_eth_dev_socket_id(port), nullptr, mbuf_pool) < 0) {
+      fmt::print("Error configuring rx queue\n");
+      return false;
+    }
   }
 
   ::rte_eth_txconf txconf = dev_info.default_txconf;
