@@ -40,9 +40,9 @@ TEST(vlan_ethernet_frame_builder_impl_test, build_valid_vlan_ethernet_frame_shou
   params.eth_type        = 0xaabb;
 
   std::unique_ptr<vlan_frame_builder> builder = create_vlan_frame_builder();
-  std::copy(packet.begin() + builder->get_header_size().value(),
+  std::copy(packet.begin() + builder->get_header_size(true).value(),
             packet.end(),
-            result_packet.begin() + builder->get_header_size().value());
+            result_packet.begin() + builder->get_header_size(true).value());
 
   builder->build_vlan_frame(result_packet, params);
 
