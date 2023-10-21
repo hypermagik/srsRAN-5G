@@ -65,9 +65,11 @@ static bool port_init(::rte_mempool* mbuf_pool, unsigned port)
   }
 
   // Configure MTU size.
-  if (::rte_eth_dev_set_mtu(port, 9574) != 0) {
-    fmt::print("Error setting MTU size\n");
-    return false;
+  if (std::string(dev_info.driver_name) != "net_memif") {
+    if (::rte_eth_dev_set_mtu(port, 9574) != 0) {
+      fmt::print("Error setting MTU size\n");
+      return false;
+    }
   }
 
   if (::rte_eth_dev_adjust_nb_rx_tx_desc(port, &nb_rxd, &nb_txd) != 0) {
