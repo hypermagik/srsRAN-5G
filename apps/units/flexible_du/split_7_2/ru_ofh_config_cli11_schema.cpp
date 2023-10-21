@@ -205,10 +205,10 @@ static void configure_cli11_ru_ofh_cells_args(CLI::App& app, ru_ofh_unit_cell_co
   add_option(app, "--du_mac_addr", config.du_mac_address, "Distributed Unit MAC address")->capture_default_str();
   add_option(app, "--vlan_tag_cp", config.vlan_tag_cp, "C-Plane V-LAN identifier")
       ->capture_default_str()
-      ->check(CLI::Range(1, 4094));
+      ->check(CLI::Range(0, 4094));
   add_option(app, "--vlan_tag_up", config.vlan_tag_up, "U-Plane V-LAN identifier")
       ->capture_default_str()
-      ->check(CLI::Range(1, 4094));
+      ->check(CLI::Range(0, 4094));
   add_option(app, "--prach_port_id", config.ru_prach_port_id, "RU PRACH port identifier")->capture_default_str();
   add_option(app, "--dl_port_id", config.ru_dl_port_id, "RU downlink port identifier")->capture_default_str();
   add_option(app, "--ul_port_id", config.ru_ul_port_id, "RU uplink port identifier")->capture_default_str();
