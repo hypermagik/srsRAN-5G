@@ -57,6 +57,8 @@ public:
       }
     }
 
+    fmt::print("CPUs available: {}\n", fmt::join(cpu_bitset.get_bit_positions(false), ","));
+
     for (unsigned bit = 0; bit != nof_cores_for_non_prio_threads; ++bit) {
       int pos = cpu_bitset.find_lowest(0, cpu_bitset.size(), false);
       if (pos == -1) {
@@ -67,6 +69,16 @@ public:
       cpu_bitset.set(pos);
       non_prio_thread_mask.set(pos);
     }
+
+    if (nof_threads_per_core > 1) {
+      for (unsigned i = 0; i < cpu_bitset.size(); i += nof_threads_per_core) {
+        for (unsigned j = 1; j < nof_threads_per_core; j++) {
+          cpu_bitset.set(i + j);
+        }
+      }
+    }
+
+    fmt::print("CPUs available for realtime workers: {}\n", fmt::join(cpu_bitset.get_bit_positions(false), ","));
   }
 
   /// Default constructor.
@@ -89,14 +101,14 @@ public:
     if (prio == os_thread_realtime_priority::no_realtime()) {
       return non_prio_thread_mask;
     }
-    int start_pos = std::min(size_t(cpu_bitset.find_highest()) + nof_threads_per_core, cpu_bitset.size() - 1);
-    int pos       = cpu_bitset.find_lowest(start_pos, cpu_bitset.size(), false);
+    int pos = cpu_bitset.find_lowest(0, cpu_bitset.size(), false);
 
     if (pos == -1) {
       fmt::print("Could not set the affinity for the {} worker\n", name);
       return {};
     }
 
+    fmt::print("CPU {} reserved for {}.\n", pos, name);
     cpu_bitset.set(pos);
     return os_sched_affinity_bitmask(pos);
   }
