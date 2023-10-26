@@ -110,7 +110,7 @@ generate_prach_control_parameters(const data_flow_cplane_scheduling_prach_contex
 
   // Initialize common fields (numSymbol parameter is number of PRACH repetitions in the case of PRACH).
   init_common_section_0_1_3_5_fields(
-      msg_params.section_fields.common_fields, context.prach_nof_rb, context.nof_repetitions);
+      msg_params.section_fields.common_fields, context.prach_nof_rb, context.nof_repetitions ?: 1);
 
   double offset_to_prach_Hz = context.prach_start_re * ra_scs_to_Hz(context.prach_scs);
   double total_bw_Hz        = 1000 * scs_to_khz(context.scs) * ru_nof_prb * NOF_SUBCARRIERS_PER_RB;
