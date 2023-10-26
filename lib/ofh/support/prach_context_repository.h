@@ -27,6 +27,7 @@
 #include "srsran/ofh/ofh_constants.h"
 #include "srsran/phy/support/prach_buffer.h"
 #include "srsran/phy/support/prach_buffer_context.h"
+#include "srsran/ran/cyclic_prefix.h"
 #include "srsran/ran/prach/prach_constants.h"
 #include "srsran/ran/prach/prach_frequency_mapping.h"
 #include "srsran/ran/prach/prach_preamble_information.h"
@@ -126,6 +127,19 @@ public:
       }
     } else {
       symbol -= start_symbol;
+    }
+
+    // Adjust symbol index
+    if (is_long_preamble(context_info.context.format)) {
+      const double pusch_symbol_duration =
+          static_cast<double>(SUBFRAME_DURATION_MSEC) /
+          static_cast<double>(get_nof_slots_per_subframe(context_info.context.pusch_scs) *
+                              get_nsymb_per_slot(cyclic_prefix::NORMAL));
+      const double   cp_length      = preamble_info.cp_length.to_seconds() * 1000;
+      const unsigned cp_nof_symbols = cp_length / pusch_symbol_duration;
+      if (symbol >= cp_nof_symbols) {
+        symbol -= cp_nof_symbols;
+      }
     }
 
     srsran_assert(context_info.buffer, "No valid PRACH buffer in the context");
