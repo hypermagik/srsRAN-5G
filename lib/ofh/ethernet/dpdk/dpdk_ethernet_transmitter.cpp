@@ -140,7 +140,12 @@ void dpdk_transmitter_impl::send(span<span<const uint8_t>> frames)
 
   static_vector<::rte_mbuf*, MAX_BURST_SIZE> mbufs;
   for (const auto frame : frames) {
-    ::rte_mbuf* mbuf = mbufs.emplace_back(::rte_pktmbuf_alloc(mbuf_pool));
+    ::rte_mbuf* mbuf = ::rte_pktmbuf_alloc(mbuf_pool);
+    if (mbuf == nullptr) {
+      break;
+    }
+
+    mbufs.emplace_back(mbuf);
 
     if (::rte_pktmbuf_append(mbuf, frame.size()) == nullptr) {
       ::rte_pktmbuf_free(mbuf);
@@ -155,7 +160,9 @@ void dpdk_transmitter_impl::send(span<span<const uint8_t>> frames)
     std::memcpy(eth_hdr, frame.data(), frame.size());
   }
 
-  ::rte_eth_tx_burst(port_id, 0, mbufs.data(), mbufs.size());
+  if (!mbufs.empty()) {
+    ::rte_eth_tx_burst(port_id, 0, mbufs.data(), mbufs.size());
+  }
 }
 
 dpdk_transmitter_impl::dpdk_transmitter_impl(const gw_config& config, srslog::basic_logger& logger_) : logger(logger_)
