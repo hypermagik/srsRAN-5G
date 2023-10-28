@@ -1107,7 +1107,7 @@ struct ofh_threads_appconfig {
 struct expert_threads_appconfig {
   expert_threads_appconfig()
   {
-    unsigned nof_threads = compute_host_nof_hardware_threads();
+    unsigned nof_threads = compute_host_nof_available_threads();
 
     if (nof_threads < 4) {
       upper_threads.nof_ul_threads            = 1;

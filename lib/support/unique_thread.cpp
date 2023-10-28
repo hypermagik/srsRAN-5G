@@ -39,6 +39,11 @@ static const size_t nof_host_cpus = []() -> size_t {
 
 size_t srsran::compute_host_nof_hardware_threads()
 {
+  return std::max(1U, std::thread::hardware_concurrency());
+}
+
+size_t srsran::compute_host_nof_available_threads()
+{
   return nof_host_cpus;
 }
 
