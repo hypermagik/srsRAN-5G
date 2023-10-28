@@ -1859,6 +1859,13 @@ static error_type<std::string> is_valid_cpu_index(unsigned cpu_idx)
     return fmt::format("Invalid CPU core selected '{}'. Valid range is [{}-{}]", cpu_idx, 0, nof_cpus - 1);
   }
 
+  cpu_set_t cpuset;
+  if (sched_getaffinity(0, sizeof(cpuset), &cpuset) == 0) {
+    if (!CPU_ISSET(cpu_idx, &cpuset)) {
+      return fmt::format("CPU core '{}' is not within the process affinity mask", cpu_idx);
+    }
+  }
+
   return default_success_t();
 }
 

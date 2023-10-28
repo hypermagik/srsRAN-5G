@@ -32,6 +32,7 @@ namespace srsran {
 
 /// Computes the number of threads that are usable in the given host.
 size_t compute_host_nof_hardware_threads();
+size_t compute_host_nof_available_threads();
 
 /// OS thread RT scheduling priority.
 /// Note: posix defines a minimum spread between sched_get_priority_max() and sched_get_priority_min() of 32.
