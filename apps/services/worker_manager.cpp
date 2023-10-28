@@ -511,7 +511,7 @@ void worker_manager::create_du_low_executors(bool     is_blocking_mode_active,
       const auto                             prio               = os_thread_realtime_priority::max() - 30;
       std::vector<os_sched_affinity_bitmask> cpu_masks;
       for (unsigned w = 0; w != nof_pusch_decoder_workers; ++w) {
-        cpu_masks.push_back(low_prio_affinity_mng.calcute_affinity_mask(sched_affinity_mask_types::low_priority));
+        cpu_masks.push_back(affinity_mng[cell_id].calcute_affinity_mask(sched_affinity_mask_types::l1_ul));
       }
 
       create_worker_pool(name_pusch_decoder,
