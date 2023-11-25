@@ -30,7 +30,7 @@ using namespace ether;
 
 /// DPDK configuration settings.
 static constexpr unsigned MAX_BURST_SIZE  = 32;
-static constexpr unsigned MAX_BUFFER_SIZE = 9600;
+static constexpr unsigned MAX_BUFFER_SIZE = 9592 + 128;
 static constexpr unsigned MBUF_CACHE_SIZE = 250;
 static constexpr unsigned RX_RING_SIZE    = 1024;
 static constexpr unsigned TX_RING_SIZE    = 1024;
