@@ -1099,6 +1099,19 @@ void rlc_tx_am_entity::on_expired_poll_retransmit_timer()
                       tx_window->size());
       return;
     }
+
+    if (sn_under_segmentation == INVALID_RLC_SN) {
+      uint32_t sn = st.tx_next_ack;
+      rlc_tx_am_sdu_info& sdu_info = (*tx_window)[sn];
+      if (sdu_info.retx_count == cfg.max_retx_thresh) {
+        // Notification should go here, not before the last retransmission is sent.
+        logger.log_debug("Max retransmission threshold {} reached for SN {}", cfg.max_retx_thresh, sn);
+        tx_window->remove_sn(sn);
+        st.tx_next_ack = (sn + 1) % mod;
+        return;
+      }
+    }
+
     // RETX first RLC SDU that has not been ACKed
     // or first SDU segment of the first RLC SDU
     // that has not been acked
