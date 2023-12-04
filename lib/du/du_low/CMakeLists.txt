@@ -28,10 +28,10 @@ add_library(srsran_du_low_wrapper STATIC ${SOURCES})
 set(DU_LOW_LIBRARIES srsran_phy_fapi_adaptor srsran_upper_phy srsran_channel_precoder)
 
 # Hardware acceleration for both PUSCH and PDSCH is enabled by default when using DPDK.
-if (DPDK_FOUND)
+if (ENABLE_PDSCH_HWACC AND ENABLE_PUSCH_HWACC)
    set_source_files_properties(${SOURCES} PROPERTIES COMPILE_DEFINITIONS "DPDK_FOUND; HWACC_PDSCH_ENABLED; HWACC_PUSCH_ENABLED")
    list(APPEND DU_LOW_LIBRARIES hal_hwacc_pusch
         hal_hwacc_pdsch
         hal_bbdev_factory)
-endif (DPDK_FOUND)
+endif (ENABLE_PDSCH_HWACC AND ENABLE_PUSCH_HWACC)
 target_link_libraries(srsran_du_low_wrapper PUBLIC ${DU_LOW_LIBRARIES})
