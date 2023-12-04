@@ -104,19 +104,8 @@ if (ENABLE_EXPORT)
   set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 endif (ENABLE_EXPORT)
 
-# Hardware acceleration for both PUSCH and PDSCH is enabled by default when using DPDK.
-if (ENABLE_DPDK)
-  # Make sure that library export is disabed, as it is not compatible with hardware acceleration.
-  if (NOT ENABLE_EXPORT)
-    SET(ENABLE_PDSCH_HWACC ON CACHE BOOL "Enable PDSCH hardware-acceleration")
-    message(STATUS "Hardware-acceleration enabled for PDSCH.")
-    SET(ENABLE_PUSCH_HWACC ON CACHE BOOL "Enable PUSCH hardware-acceleration")
-    message(STATUS "Hardware-acceleration enabled for PUSCH.")
-  endif ()
-else (ENABLE_DPDK)
-    unset(ENABLE_PDSCH_HWACC CACHE)
-    unset(ENABLE_PUSCH_HWACC CACHE)
-endif (ENABLE_DPDK)
+unset(ENABLE_PDSCH_HWACC CACHE)
+unset(ENABLE_PUSCH_HWACC CACHE)
 
 ########################################################################
 # Install Dirs
@@ -296,7 +285,7 @@ endif (ENABLE_LIBNUMA)
 
 # DPDK
 if (ENABLE_DPDK)
-    set(DPDK_MIN_VERSION "22.11")
+    set(DPDK_MIN_VERSION "21.11")
     find_package(DPDK ${DPDK_MIN_VERSION})
     if (DPDK_FOUND)
         include_directories(SYSTEM ${DPDK_INCLUDE_DIRS})
