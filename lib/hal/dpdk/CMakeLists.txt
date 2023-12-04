@@ -18,7 +18,7 @@
 # and at http://www.gnu.org/licenses/.
 #
 
-add_subdirectory(bbdev)
+# add_subdirectory(bbdev)
 
 set(SOURCES
   dpdk_eal_factory.cpp
