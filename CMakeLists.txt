@@ -263,7 +263,7 @@ endif (ENABLE_ZEROMQ)
 
 # DPDK
 if (ENABLE_DPDK)
-    set(DPDK_MIN_VERSION "22.11")
+    set(DPDK_MIN_VERSION "21.11")
     find_package(DPDK ${DPDK_MIN_VERSION})
     if (DPDK_FOUND)
         include_directories(SYSTEM ${DPDK_INCLUDE_DIRS})
