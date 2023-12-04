@@ -31,9 +31,9 @@ add_library(srsran_o_du STATIC
 target_link_libraries(srsran_o_du PUBLIC srsran_o_du_high srsran_o_du_low)
 
 # Hardware acceleration for both PUSCH and PDSCH is enabled by default when using DPDK.
-if (DPDK_FOUND)
+if (ENABLE_PDSCH_HWACC AND ENABLE_PUSCH_HWACC)
    set_source_files_properties(o_du_factory.cpp o_du_impl.cpp PROPERTIES COMPILE_DEFINITIONS "DPDK_FOUND; HWACC_PDSCH_ENABLED; HWACC_PUSCH_ENABLED")
    list(APPEND DU_LOW_LIBRARIES srsran_hal_pusch
            srsran_hal_pdsch
            srsran_hal_bbdev)
-endif (DPDK_FOUND)
+endif (ENABLE_PDSCH_HWACC AND ENABLE_PUSCH_HWACC)
