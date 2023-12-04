@@ -41,10 +41,10 @@ set(FLEXIBLE_DU_DYNAMIC_LIBRARIES
         srsran_du_high_unit_helpers)
 
 # Hardware acceleration for both PUSCH and PDSCH is enabled by default when using DPDK.
-if (DPDK_FOUND)
+if (ENABLE_PDSCH_HWACC AND ENABLE_PUSCH_HWACC)
    set_source_files_properties(dynamic_du_factory.cpp PROPERTIES COMPILE_DEFINITIONS "DPDK_FOUND; HWACC_PDSCH_ENABLED; HWACC_PUSCH_ENABLED")
    list(APPEND FLEXIBLE_DU_DYNAMIC_LIBRARIES hal_hwacc_pusch
         hal_hwacc_pdsch
         hal_bbdev_factory)
-endif (DPDK_FOUND)
+endif (ENABLE_PDSCH_HWACC AND ENABLE_PUSCH_HWACC)
 target_link_libraries(srsran_flexible_du_dynamic ${FLEXIBLE_DU_DYNAMIC_LIBRARIES})
