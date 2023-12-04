@@ -119,16 +119,9 @@ if (ENABLE_ASAN AND ENABLE_TSAN)
     message(FATAL_ERROR "ASAN and TSAN cannot be enabled at the same time.")
 endif ()
 
-# Hardware acceleration for both PUSCH and PDSCH is enabled by default when using DPDK.
-if (ENABLE_DPDK)
-  SET(ENABLE_PDSCH_HWACC ON CACHE BOOL "Enable PDSCH hardware-acceleration")
-  message(STATUS "Hardware-acceleration enabled for PDSCH.")
-  SET(ENABLE_PUSCH_HWACC ON CACHE BOOL "Enable PUSCH hardware-acceleration")
-  message(STATUS "Hardware-acceleration enabled for PUSCH.")
-else (ENABLE_DPDK)
-  unset(ENABLE_PDSCH_HWACC CACHE)
-  unset(ENABLE_PUSCH_HWACC CACHE)
-endif (ENABLE_DPDK)
+# Hardware acceleration for both PUSCH and PDSCH is disabled.
+unset(ENABLE_PDSCH_HWACC CACHE)
+unset(ENABLE_PUSCH_HWACC CACHE)
 
 ########################################################################
 # ENABLE_EXPORT
@@ -334,7 +327,7 @@ endif (ENABLE_LIBNUMA)
 
 # DPDK
 if (ENABLE_DPDK)
-    set(DPDK_MIN_VERSION "22.11")
+    set(DPDK_MIN_VERSION "21.11")
     find_package(DPDK ${DPDK_MIN_VERSION})
     if (DPDK_FOUND)
         include_directories(SYSTEM ${DPDK_INCLUDE_DIRS})
