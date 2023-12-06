@@ -113,7 +113,7 @@ radio_bladerf_tx_stream::radio_bladerf_tx_stream(bladerf*                    dev
   }
 
   for (size_t channel = 0; channel < nof_channels; channel++) {
-    fmt::print(BLADERF_LOG_PREFIX "Enabling Tx module for channel {}...\n", channel + 1);
+    fmt::print(BLADERF_LOG_PREFIX "Enabling Tx module for channel {}...\n", channel);
 
     status = bladerf_enable_module(device, BLADERF_CHANNEL_TX(channel), true);
     if (status != 0) {
@@ -422,7 +422,7 @@ void radio_bladerf_tx_stream::stop()
   bladerf_deinit_stream(stream);
 
   for (size_t channel = 0; channel < nof_channels; channel++) {
-    fmt::print(BLADERF_LOG_PREFIX "Disabling Tx module for channel {}...\n", channel + 1);
+    fmt::print(BLADERF_LOG_PREFIX "Disabling Tx module for channel {}...\n", channel);
 
     int status = bladerf_enable_module(device, BLADERF_CHANNEL_TX(channel), false);
     if (status != 0) {
