@@ -50,8 +50,8 @@ public:
                    const radio_bladerf_rx_stream::stream_description& description,
                    radio_bladerf_tx_stream&                           tx_stream);
 
-  bool set_tx_rate(double& actual_rate, double rate);
-  bool set_rx_rate(double& actual_rate, double rate);
+  bool set_tx_rate(unsigned ch, double rate);
+  bool set_rx_rate(unsigned ch, double rate);
   bool set_tx_gain(unsigned ch, double gain);
   bool set_rx_gain(unsigned ch, double gain);
   bool set_tx_freq(unsigned ch, const radio_configuration::lo_frequency& config);
