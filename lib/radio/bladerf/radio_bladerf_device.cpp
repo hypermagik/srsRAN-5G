@@ -182,23 +182,41 @@ radio_bladerf_device::create_rx_stream(radio_notification_handler&              
   return nullptr;
 }
 
-bool radio_bladerf_device::set_tx_rate(double& actual_rate, double rate)
+bool radio_bladerf_device::set_tx_rate(unsigned ch, double rate)
 {
   fmt::print(BLADERF_LOG_PREFIX "Setting Tx Rate to {:.2f} MHz...\n", to_MHz(rate));
 
+  bladerf_correction_value corr_i, corr_q, corr_phase, corr_gain;
+  bladerf_get_correction(device, BLADERF_CHANNEL_TX(ch), bladerf_correction::BLADERF_CORR_DCOFF_I, &corr_i);
+  bladerf_get_correction(device, BLADERF_CHANNEL_TX(ch), bladerf_correction::BLADERF_CORR_DCOFF_Q, &corr_q);
+  bladerf_get_correction(device, BLADERF_CHANNEL_TX(ch), bladerf_correction::BLADERF_CORR_PHASE, &corr_phase);
+  bladerf_get_correction(device, BLADERF_CHANNEL_TX(ch), bladerf_correction::BLADERF_CORR_GAIN, &corr_gain);
+
+  fmt::print(BLADERF_LOG_PREFIX "Applying correction values I={} Q={} phase={} gain={}...\n",
+             corr_i,
+             corr_q,
+             corr_phase,
+             corr_gain);
+
+  // Re-applying the correction values seems to force a re-calibration when the rx sampling
+  // rate is later set, providing better DC offset correction at higher frequencies.
+  bladerf_set_correction(device, BLADERF_CHANNEL_TX(ch), bladerf_correction::BLADERF_CORR_DCOFF_I, corr_i);
+  bladerf_set_correction(device, BLADERF_CHANNEL_TX(ch), bladerf_correction::BLADERF_CORR_DCOFF_Q, corr_q);
+  bladerf_set_correction(device, BLADERF_CHANNEL_TX(ch), bladerf_correction::BLADERF_CORR_PHASE, corr_phase);
+  bladerf_set_correction(device, BLADERF_CHANNEL_TX(ch), bladerf_correction::BLADERF_CORR_GAIN, corr_gain);
+
   bladerf_sample_rate rf_actual_rate;
 
-  int status = bladerf_set_sample_rate(device, BLADERF_TX_X1, static_cast<bladerf_sample_rate>(rate), &rf_actual_rate);
+  int status =
+      bladerf_set_sample_rate(device, BLADERF_CHANNEL_TX(ch), static_cast<bladerf_sample_rate>(rate), &rf_actual_rate);
   if (status != 0) {
     on_error("bladerf_set_sample_rate() failed - {}", bladerf_strerror(status));
     return false;
   }
 
-  actual_rate = rf_actual_rate;
-
   bladerf_bandwidth rf_actual_bw;
 
-  status = bladerf_set_bandwidth(device, BLADERF_TX_X1, static_cast<bladerf_bandwidth>(rate), &rf_actual_bw);
+  status = bladerf_set_bandwidth(device, BLADERF_CHANNEL_TX(ch), static_cast<bladerf_bandwidth>(rate), &rf_actual_bw);
   if (status != 0) {
     on_error("bladerf_set_bandwidth() failed - {}", bladerf_strerror(status));
     return false;
@@ -210,22 +228,23 @@ bool radio_bladerf_device::set_tx_rate(double& actual_rate, double rate)
   return true;
 }
 
-bool radio_bladerf_device::set_rx_rate(double& actual_rate, double rate)
+bool radio_bladerf_device::set_rx_rate(unsigned ch, double rate)
 {
   fmt::print(BLADERF_LOG_PREFIX "Setting Rx Rate to {:.2f} MHz...\n", to_MHz(rate));
 
   bladerf_sample_rate rf_actual_rate;
 
-  int status = bladerf_set_sample_rate(device, BLADERF_RX_X1, static_cast<bladerf_sample_rate>(rate), &rf_actual_rate);
+  int status =
+      bladerf_set_sample_rate(device, BLADERF_CHANNEL_RX(ch), static_cast<bladerf_sample_rate>(rate), &rf_actual_rate);
   if (status != 0) {
     on_error("bladerf_set_sample_rate() failed - {}", bladerf_strerror(status));
     return false;
   }
 
-  actual_rate = rf_actual_rate;
   bladerf_bandwidth rf_actual_bw;
 
-  status = bladerf_set_bandwidth(device, BLADERF_RX_X1, static_cast<bladerf_bandwidth>(rate * 0.8), &rf_actual_bw);
+  status =
+      bladerf_set_bandwidth(device, BLADERF_CHANNEL_RX(ch), static_cast<bladerf_bandwidth>(rate * 0.8), &rf_actual_bw);
   if (status != 0) {
     on_error("bladerf_set_bandwidth() failed - {}", bladerf_strerror(status));
     return false;
@@ -241,7 +260,7 @@ bool radio_bladerf_device::set_tx_gain(unsigned ch, double gain)
 {
   fmt::print(BLADERF_LOG_PREFIX "Setting channel {} Tx gain to {:.2f} dB...\n", ch, gain);
 
-  int status = bladerf_set_gain(device, ch == 0 ? BLADERF_TX_X1 : BLADERF_TX_X2, static_cast<bladerf_gain>(gain));
+  int status = bladerf_set_gain(device, BLADERF_CHANNEL_TX(ch), static_cast<bladerf_gain>(gain));
   if (status != 0) {
     on_error("bladerf_set_gain() failed - {}", bladerf_strerror(status));
     return false;
@@ -254,7 +273,7 @@ bool radio_bladerf_device::set_rx_gain(unsigned ch, double gain)
 {
   fmt::print(BLADERF_LOG_PREFIX "Setting channel {} Rx gain to {:.2f} dB...\n", ch, gain);
 
-  int status = bladerf_set_gain(device, ch == 0 ? BLADERF_RX_X1 : BLADERF_RX_X2, static_cast<bladerf_gain>(gain));
+  int status = bladerf_set_gain(device, BLADERF_CHANNEL_RX(ch), static_cast<bladerf_gain>(gain));
   if (status != 0) {
     on_error("bladerf_set_gain() failed - {}", bladerf_strerror(status));
     return false;
@@ -268,9 +287,8 @@ bool radio_bladerf_device::set_tx_freq(uint32_t ch, const radio_configuration::l
   fmt::print(
       BLADERF_LOG_PREFIX "Setting channel {} Tx frequency to {} MHz...\n", ch, to_MHz(config.center_frequency_hz));
 
-  int status = bladerf_set_frequency(device,
-                                     ch == 0 ? BLADERF_TX_X1 : BLADERF_TX_X2,
-                                     static_cast<bladerf_frequency>(round(config.center_frequency_hz)));
+  int status = bladerf_set_frequency(
+      device, BLADERF_CHANNEL_TX(ch), static_cast<bladerf_frequency>(round(config.center_frequency_hz)));
   if (status != 0) {
     on_error("bladerf_set_frequency() failed - {}", bladerf_strerror(status));
     return false;
@@ -284,9 +302,8 @@ bool radio_bladerf_device::set_rx_freq(uint32_t ch, const radio_configuration::l
   fmt::print(
       BLADERF_LOG_PREFIX "Setting channel {} Rx frequency to {} MHz...\n", ch, to_MHz(config.center_frequency_hz));
 
-  int status = bladerf_set_frequency(device,
-                                     ch == 0 ? BLADERF_RX_X1 : BLADERF_RX_X2,
-                                     static_cast<bladerf_frequency>(round(config.center_frequency_hz)));
+  int status = bladerf_set_frequency(
+      device, BLADERF_CHANNEL_RX(ch), static_cast<bladerf_frequency>(round(config.center_frequency_hz)));
   if (status != 0) {
     on_error("bladerf_set_frequency() failed - {}", bladerf_strerror(status));
     return false;

@@ -115,7 +115,7 @@ bool radio_bladerf_rx_stream::start(baseband_gateway_timestamp init_time)
   }
 
   for (size_t channel = 0; channel < nof_channels; channel++) {
-    fmt::print(BLADERF_LOG_PREFIX "Enabling Rx module for channel {}...\n", channel + 1);
+    fmt::print(BLADERF_LOG_PREFIX "Enabling Rx module for channel {}...\n", channel);
 
     int status = bladerf_enable_module(device, BLADERF_CHANNEL_RX(channel), true);
     if (status != 0) {
@@ -433,7 +433,7 @@ void radio_bladerf_rx_stream::stop()
   bladerf_deinit_stream(stream);
 
   for (size_t channel = 0; channel < nof_channels; channel++) {
-    fmt::print(BLADERF_LOG_PREFIX "Disabling Rx module for channel {}...\n", channel + 1);
+    fmt::print(BLADERF_LOG_PREFIX "Disabling Rx module for channel {}...\n", channel);
 
     int status = bladerf_enable_module(device, BLADERF_CHANNEL_RX(channel), false);
     if (status != 0) {
