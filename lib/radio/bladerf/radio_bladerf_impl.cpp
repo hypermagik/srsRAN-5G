@@ -89,6 +89,39 @@ bool radio_session_bladerf_impl::set_rx_freq(unsigned port_idx, radio_configurat
   return true;
 }
 
+bool radio_session_bladerf_impl::set_tx_rate(unsigned port_idx, double sampling_rate_hz)
+{
+  if (port_idx >= tx_port_map.size()) {
+    fmt::print(
+        "Error: transmit port index ({}) exceeds the number of ports ({}).\n", port_idx, (int)tx_port_map.size());
+    return false;
+  }
+
+  // Setup frequency.
+  if (!device.set_tx_rate(port_idx, sampling_rate_hz)) {
+    fmt::print("Error: setting sampling rate for transmitter {}. {}\n", port_idx, device.get_error_message());
+    return false;
+  }
+
+  return true;
+}
+
+bool radio_session_bladerf_impl::set_rx_rate(unsigned port_idx, double sampling_rate_hz)
+{
+  if (port_idx >= rx_port_map.size()) {
+    fmt::print("Error: receive port index ({}) exceeds the number of ports ({}).\n", port_idx, (int)tx_port_map.size());
+    return false;
+  }
+
+  // Setup frequency.
+  if (!device.set_rx_rate(port_idx, sampling_rate_hz)) {
+    fmt::print("Error: setting sampling rate for receiver {}. {}.\n", port_idx, device.get_error_message());
+    return false;
+  }
+
+  return true;
+}
+
 bool radio_session_bladerf_impl::start_streams(baseband_gateway_timestamp init_time)
 {
   // Prevent multiple threads from starting streams simultaneously.
@@ -133,22 +166,6 @@ radio_session_bladerf_impl::radio_session_bladerf_impl(const radio_configuration
     return;
   }
 
-  // Set Tx rate.
-  double actual_tx_rate_Hz = 0.0;
-  if (!device.set_tx_rate(actual_tx_rate_Hz, radio_config.sampling_rate_hz)) {
-    fmt::print("Error: setting Tx sampling rate. {}\n", device.get_error_message());
-    return;
-  }
-  srsran_assert(std::isnormal(actual_tx_rate_Hz), "Actual transmit sampling rate is invalid.");
-
-  // Set Rx rate.
-  double actual_rx_rate_Hz = 0.0;
-  if (!device.set_rx_rate(actual_rx_rate_Hz, radio_config.sampling_rate_hz)) {
-    fmt::print("Error: setting Rx sampling rate. {}\n", device.get_error_message());
-    return;
-  }
-  srsran_assert(std::isnormal(actual_rx_rate_Hz), "Actual receive sampling rate is invalid.");
-
   // Lists of stream descriptions.
   std::vector<radio_bladerf_tx_stream::stream_description> tx_stream_description_list;
   std::vector<radio_bladerf_rx_stream::stream_description> rx_stream_description_list;
@@ -162,7 +179,7 @@ radio_session_bladerf_impl::radio_session_bladerf_impl(const radio_configuration
     radio_bladerf_tx_stream::stream_description stream_description = {};
     stream_description.id                                          = stream_idx;
     stream_description.otw_format                                  = radio_config.otw_format;
-    stream_description.srate_Hz                                    = actual_tx_rate_Hz;
+    stream_description.srate_Hz                                    = radio_config.sampling_rate_hz;
     stream_description.nof_channels                                = stream.channels.size();
 
     // Setup ports.
@@ -173,13 +190,18 @@ radio_session_bladerf_impl::radio_session_bladerf_impl(const radio_configuration
       // Extract port configuration.
       const radio_configuration::channel& channel = stream.channels[channel_idx];
 
-      // Setup gain.
-      if (!set_tx_gain(channel_idx, channel.gain_dB)) {
+      // Setup frequency.
+      if (!set_tx_freq(channel_idx, channel.freq)) {
         return;
       }
 
-      // Setup frequency.
-      if (!set_tx_freq(channel_idx, channel.freq)) {
+      // Set Tx rate.
+      if (!set_tx_rate(channel_idx, radio_config.sampling_rate_hz)) {
+        return;
+      }
+
+      // Setup gain.
+      if (!set_tx_gain(channel_idx, channel.gain_dB)) {
         return;
       }
     }
@@ -197,7 +219,7 @@ radio_session_bladerf_impl::radio_session_bladerf_impl(const radio_configuration
     radio_bladerf_rx_stream::stream_description stream_description = {};
     stream_description.id                                          = stream_idx;
     stream_description.otw_format                                  = radio_config.otw_format;
-    stream_description.srate_Hz                                    = actual_rx_rate_Hz;
+    stream_description.srate_Hz                                    = radio_config.sampling_rate_hz;
     stream_description.nof_channels                                = stream.channels.size();
 
     // Setup ports.
@@ -208,13 +230,18 @@ radio_session_bladerf_impl::radio_session_bladerf_impl(const radio_configuration
       // Extract port configuration.
       const radio_configuration::channel& channel = stream.channels[channel_idx];
 
-      // Setup gain.
-      if (!set_rx_gain(channel_idx, channel.gain_dB)) {
+      // Setup frequency.
+      if (!set_rx_freq(channel_idx, channel.freq)) {
         return;
       }
 
-      // Setup frequency.
-      if (!set_rx_freq(channel_idx, channel.freq)) {
+      // Set Rx rate.
+      if (!set_rx_rate(channel_idx, radio_config.sampling_rate_hz)) {
+        return;
+      }
+
+      // Setup gain.
+      if (!set_rx_gain(channel_idx, channel.gain_dB)) {
         return;
       }
     }
