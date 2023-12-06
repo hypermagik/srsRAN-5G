@@ -69,12 +69,21 @@ private:
   /// \return True if the port index and frequency value are valid, and no exception is caught. Otherwise false.
   bool set_rx_freq(unsigned port_idx, radio_configuration::lo_frequency frequency);
 
+  /// \brief Set transmission sampling rate.
+  /// \param[in] port_idx Indicates the port index.
+  /// \param[in] gain_dB Provides the sampling rate
+  /// \return True if the port index and sampling rate are valid, and no exception is caught. Otherwise false.
+  bool set_tx_rate(unsigned port_idx, double sampling_rate_hz);
+
+  /// \brief Set reception sampling rate.
+  /// \param[in] port_idx Indicates the port index.
+  /// \param[in] gain_dB Provides the sampling rate
+  /// \return True if the port index and sampling rate are valid, and no exception is caught. Otherwise false.
+  bool set_rx_rate(unsigned port_idx, double sampling_rate_hz);
+
   /// \brief Start streams.
   /// \return True if no exception is caught. Otherwise false.
   bool start_streams(baseband_gateway_timestamp init_time);
-
-public:
-  baseband_gateway_timestamp read_current_time() override;
 
 public:
   /// Constructs a radio session based on bladeRF.
@@ -108,6 +117,9 @@ public:
 
   // See interface for documentation.
   bool set_rx_gain(unsigned port_idx, double gain_dB) override;
+
+  // See interface for documentation.
+  baseband_gateway_timestamp read_current_time() override;
 };
 
 class radio_factory_bladerf_impl : public radio_factory
