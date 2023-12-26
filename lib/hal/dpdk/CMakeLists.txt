@@ -18,7 +18,9 @@
 # and at http://www.gnu.org/licenses/.
 #
 
-add_subdirectory(bbdev)
+if (ENABLE_PUSCH_HWACC)
+    add_subdirectory(bbdev)
+endif (ENABLE_PUSCH_HWACC)
 
 set(SOURCES
   dpdk_eal_factory.cpp

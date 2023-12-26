@@ -18,6 +18,14 @@
 # and at http://www.gnu.org/licenses/.
 #
 
+set(SOURCES
+  bbdev.cpp
+  bbdev_acc.cpp
+  bbdev_acc_factory.cpp
+  bbdev_op_pool_factory.cpp
+  ldpc/bbdev_ldpc_decoder.cpp
+)
+
 add_library(hal_bbdev STATIC ${SOURCES})
 target_compile_options(hal_bbdev PRIVATE ${DPDK_CFLAGS})
 target_link_libraries(hal_bbdev srslog ${DPDK_LIBRARIES})
