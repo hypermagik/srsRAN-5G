@@ -40,8 +40,10 @@ struct gw_config;
 std::unique_ptr<gateway> create_dpdk_gateway(const gw_config& config, srslog::basic_logger& logger);
 
 /// Creates a DPDK Ethernet receiver.
-std::unique_ptr<receiver>
-create_dpdk_receiver(task_executor& executor, frame_notifier& notifier, srslog::basic_logger& logger);
+std::unique_ptr<receiver> create_dpdk_receiver(const std::string&    interface,
+                                               task_executor&        executor,
+                                               frame_notifier&       notifier,
+                                               srslog::basic_logger& logger);
 
 } // namespace ether
 } // namespace srsran

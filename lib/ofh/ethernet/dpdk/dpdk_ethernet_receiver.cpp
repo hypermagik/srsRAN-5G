@@ -23,6 +23,7 @@
 #include "dpdk_ethernet_receiver.h"
 #include "srsran/ofh/ethernet/ethernet_frame_notifier.h"
 #include "srsran/support/executors/task_executor.h"
+#include <rte_bus_pci.h>
 #include <rte_ethdev.h>
 #include <thread>
 
@@ -106,6 +107,44 @@ static void dpdk_eth_close(unsigned portid)
   }
   ::rte_eth_dev_close(portid);
   fmt::print(" Done\n");
+}
+
+dpdk_receiver_impl::dpdk_receiver_impl(const std::string&    interface,
+                                       task_executor&        executor_,
+                                       frame_notifier&       notifier_,
+                                       srslog::basic_logger& logger_) :
+  logger(logger_), executor(executor_), notifier(notifier_)
+{
+  unsigned portid;
+  RTE_ETH_FOREACH_DEV(portid)
+  {
+    ::rte_eth_dev_info dev_info;
+
+    int ret = ::rte_eth_dev_info_get(portid, &dev_info);
+    if (ret != 0) {
+      ::rte_exit(EXIT_FAILURE, "Cannot get device info\n");
+    }
+
+    ::rte_pci_device* pci_dev = RTE_DEV_TO_PCI(dev_info.device);
+
+    char pci_address[16];
+    ::snprintf(pci_address,
+               sizeof(pci_address),
+               "%04x:%02x:%02x.%x",
+               pci_dev->addr.domain,
+               pci_dev->addr.bus,
+               pci_dev->addr.devid,
+               pci_dev->addr.function);
+
+    if (strcmp(pci_address, interface.c_str()) == 0) {
+      port_id = portid;
+      break;
+    }
+  }
+
+  if (port_id == ~0u) {
+    ::rte_exit(EXIT_FAILURE, "Device not found\n");
+  }
 }
 
 dpdk_receiver_impl::~dpdk_receiver_impl()

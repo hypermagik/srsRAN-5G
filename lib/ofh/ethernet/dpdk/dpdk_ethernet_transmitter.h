@@ -43,7 +43,7 @@ public:
 
 private:
   srslog::basic_logger& logger;
-  const unsigned        port_id   = 0;
+  unsigned              port_id = ~0u;
   ::rte_mempool*        mbuf_pool = nullptr;
 };
 

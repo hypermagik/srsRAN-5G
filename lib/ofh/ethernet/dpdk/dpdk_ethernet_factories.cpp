@@ -32,8 +32,10 @@ std::unique_ptr<gateway> srsran::ether::create_dpdk_gateway(const gw_config& con
   return std::make_unique<dpdk_transmitter_impl>(config, logger);
 }
 
-std::unique_ptr<receiver>
-srsran::ether::create_dpdk_receiver(task_executor& executor, frame_notifier& notifier, srslog::basic_logger& logger)
+std::unique_ptr<receiver> srsran::ether::create_dpdk_receiver(const std::string&    interface,
+                                                              task_executor&        executor,
+                                                              frame_notifier&       notifier,
+                                                              srslog::basic_logger& logger)
 {
-  return std::make_unique<dpdk_receiver_impl>(executor, notifier, logger);
+  return std::make_unique<dpdk_receiver_impl>(interface, executor, notifier, logger);
 }

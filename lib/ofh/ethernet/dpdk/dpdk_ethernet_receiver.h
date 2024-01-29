@@ -37,10 +37,10 @@ class frame_notifier;
 class dpdk_receiver_impl : public receiver
 {
 public:
-  dpdk_receiver_impl(task_executor& executor_, frame_notifier& notifier_, srslog::basic_logger& logger_) :
-    logger(logger_), executor(executor_), notifier(notifier_)
-  {
-  }
+  dpdk_receiver_impl(const std::string&    interface_,
+                     task_executor&        executor_,
+                     frame_notifier&       notifier_,
+                     srslog::basic_logger& logger_);
 
   ~dpdk_receiver_impl() override;
 
@@ -61,7 +61,7 @@ private:
   srslog::basic_logger& logger;
   task_executor&        executor;
   frame_notifier&       notifier;
-  const unsigned        port_id = 0;
+  unsigned              port_id = ~0u;
   unsigned              nb_rx_queues = 1;
   std::atomic<bool>     is_stop_requested{false};
 };

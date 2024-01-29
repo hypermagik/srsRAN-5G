@@ -126,7 +126,8 @@ std::unique_ptr<sector> srsran::ofh::create_ofh_sector(const sector_configuratio
 
   // Build the ethernet receiver.
 #ifdef DPDK_FOUND
-  auto eth_receiver = (sector_cfg.uses_dpdk) ? ether::create_dpdk_receiver(*sector_deps.receiver_executor,
+  auto eth_receiver = (sector_cfg.uses_dpdk) ? ether::create_dpdk_receiver(sector_cfg.interface,
+                                                                           *sector_deps.receiver_executor,
                                                                            receiver->get_ethernet_frame_notifier(),
                                                                            *sector_deps.logger)
                                              : ether::create_receiver(sector_cfg.interface,

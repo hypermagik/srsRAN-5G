@@ -23,6 +23,7 @@
 #include "dpdk_ethernet_transmitter.h"
 #include "srsran/adt/static_vector.h"
 #include "srsran/ofh/ethernet/ethernet_gw_config.h"
+#include <rte_bus_pci.h>
 #include <rte_ethdev.h>
 
 using namespace srsran;
@@ -122,27 +123,53 @@ static bool port_init(const gw_config& config, ::rte_mempool* mbuf_pool, unsigne
 }
 
 /// Configures an Ethernet port using DPDK.
-static void dpdk_port_configure(const gw_config& config, ::rte_mempool*& mbuf_pool)
+static void dpdk_port_configure(const gw_config& config, unsigned& port_id, ::rte_mempool*& mbuf_pool)
 {
-  if (::rte_eth_dev_count_avail() != 1) {
-    ::rte_exit(
-        EXIT_FAILURE, "Error: number of DPDK devices must be one but is currently %d\n", ::rte_eth_dev_count_avail());
+  fmt::print("Initializing DPDK device {}.\n", config.interface);
+
+  unsigned portid;
+  RTE_ETH_FOREACH_DEV(portid)
+  {
+    ::rte_eth_dev_info dev_info;
+
+    int ret = ::rte_eth_dev_info_get(portid, &dev_info);
+    if (ret != 0) {
+      ::rte_exit(EXIT_FAILURE, "Cannot get device info\n");
+    }
+
+    ::rte_pci_device* pci_dev = RTE_DEV_TO_PCI(dev_info.device);
+
+    char pci_address[16];
+    ::snprintf(pci_address,
+               sizeof(pci_address),
+               "%04x:%02x:%02x.%x",
+               pci_dev->addr.domain,
+               pci_dev->addr.bus,
+               pci_dev->addr.devid,
+               pci_dev->addr.function);
+
+    if (strcmp(pci_address, config.interface.c_str()) == 0) {
+      port_id = portid;
+      break;
+    }
   }
+
+  if (port_id == ~0u) {
+    ::rte_exit(EXIT_FAILURE, "Device not found\n");
+  }
+
+  const std::string pool_name = "OFH_MBUF_POOL_" + std::to_string(port_id);
 
   // Creates a new mempool in memory to hold the mbufs.
   mbuf_pool =
-      ::rte_pktmbuf_pool_create("OFH_MBUF_POOL", NUM_MBUFS, MBUF_CACHE_SIZE, 0, MAX_BUFFER_SIZE, ::rte_socket_id());
+      ::rte_pktmbuf_pool_create(pool_name.c_str(), NUM_MBUFS, MBUF_CACHE_SIZE, 0, MAX_BUFFER_SIZE, ::rte_socket_id());
   if (mbuf_pool == nullptr) {
     ::rte_exit(EXIT_FAILURE, "Cannot create mbuf pool\n");
   }
 
-  // Initializing all ports (single one for now).
-  unsigned portid;
-  RTE_ETH_FOREACH_DEV(portid)
-  {
-    if (!port_init(config, mbuf_pool, portid)) {
-      ::rte_exit(EXIT_FAILURE, "Cannot init port\n");
-    }
+  // Initialize port.
+  if (!port_init(config, mbuf_pool, port_id)) {
+    ::rte_exit(EXIT_FAILURE, "Cannot init port\n");
   }
 }
 
@@ -193,5 +220,5 @@ void dpdk_transmitter_impl::send(span<span<const uint8_t>> frames)
 
 dpdk_transmitter_impl::dpdk_transmitter_impl(const gw_config& config, srslog::basic_logger& logger_) : logger(logger_)
 {
-  dpdk_port_configure(config, mbuf_pool);
+  dpdk_port_configure(config, port_id, mbuf_pool);
 }
