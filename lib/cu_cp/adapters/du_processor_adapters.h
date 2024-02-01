@@ -114,6 +114,12 @@ public:
     return ue_context_handler->handle_ue_context_transfer(ue_index, old_ue_index);
   }
 
+  bool on_ue_transfer_required_sync(ue_index_t ue_index, ue_index_t old_ue_index) override
+  {
+    srsran_assert(ue_context_handler != nullptr, "UE context handler must not be nullptr");
+    return ue_context_handler->handle_ue_context_transfer_sync(ue_index, old_ue_index);
+  }
+
 private:
   cu_cp_du_event_handler*                cu_cp_handler      = nullptr;
   cu_cp_ue_removal_handler*              ue_removal_handler = nullptr;

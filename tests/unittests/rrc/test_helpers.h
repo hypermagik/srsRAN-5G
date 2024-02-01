@@ -143,6 +143,11 @@ public:
     });
   }
 
+  bool on_ue_transfer_required_sync(ue_index_t ue_index, ue_index_t old_ue_index) override {
+    logger.info("Requested a UE context transfer from ue={} with old_ue={}.", ue_index, old_ue_index);
+    return true;
+  }
+
   void on_ue_removal_required(ue_index_t ue_index) override { logger.info("ue={}: Requested a UE removal", ue_index); }
 
   optional<rrc_meas_cfg> on_measurement_config_request(nr_cell_id_t           nci,

@@ -140,6 +140,12 @@ public:
     });
   }
 
+  bool on_ue_transfer_required_sync(ue_index_t ue_index, ue_index_t old_ue_index) override {
+    logger.info("Received UE transfer required");
+
+    return ue_transfer_outcome;
+  }
+
 private:
   srslog::basic_logger&                             logger = srslog::fetch_basic_logger("TEST");
   std::unique_ptr<dummy_ngap_du_processor_notifier> ngap_notifier;
