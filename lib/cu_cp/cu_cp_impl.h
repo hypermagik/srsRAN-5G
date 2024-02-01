@@ -79,6 +79,7 @@ public:
   rrc_reestablishment_ue_context_t
                    handle_rrc_reestablishment_request(pci_t old_pci, rnti_t old_c_rnti, ue_index_t ue_index) override;
   async_task<bool> handle_ue_context_transfer(ue_index_t ue_index, ue_index_t old_ue_index) override;
+  bool             handle_ue_context_transfer_sync(ue_index_t ue_index, ue_index_t old_ue_index) override;
 
   // cu_cp_ue_removal_interface
   void handle_ue_removal_request(ue_index_t ue_index) override;

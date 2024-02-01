@@ -196,6 +196,12 @@ public:
     return cu_cp_rrc_ue_handler->handle_ue_context_transfer(ue_index, old_ue_index);
   }
 
+  bool on_ue_transfer_required_sync(ue_index_t ue_index, ue_index_t old_ue_index) override
+  {
+    srsran_assert(cu_cp_rrc_ue_handler != nullptr, "CU-CP handler must not be nullptr");
+    return cu_cp_rrc_ue_handler->handle_ue_context_transfer_sync(ue_index, old_ue_index);
+  }
+
   void on_ue_removal_required(ue_index_t ue_index) override
   {
     srsran_assert(ue_removal_handler != nullptr, "CU-CP UE removal handler must not be nullptr");

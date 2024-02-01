@@ -208,11 +208,12 @@ void inter_du_handover_routine::operator()(coro_context<async_task<cu_cp_inter_d
   }
 
   // Transfer old UE context (NGAP and E1AP) to new UE context and remove old UE context.
-  CORO_AWAIT_VALUE(context_transfer_success,
-                   cu_cp_notifier.on_ue_transfer_required(target_ue->get_ue_index(), command.source_ue_index));
-  if (not context_transfer_success) {
-    logger.warning("ue={}: \"{}\" failed to transfer UE context", command.source_ue_index, name());
-    CORO_EARLY_RETURN(response_msg);
+  {
+    const bool result = cu_cp_notifier.on_ue_transfer_required_sync(target_ue->get_ue_index(), command.source_ue_index);
+    if (not result) {
+      logger.warning("ue={}: \"{}\" failed to transfer UE context", command.source_ue_index, name());
+      CORO_EARLY_RETURN(response_msg);
+    }
   }
 
   // Remove source UE context.

@@ -200,7 +200,8 @@ public:
   /// \brief Transfer and remove UE contexts for an ongoing Reestablishment.
   /// \param[in] ue_index The new UE index of the UE that sent the Reestablishment Request.
   /// \param[in] old_ue_index The old UE index of the UE that sent the Reestablishment Request.
-  virtual async_task<bool> handle_ue_context_transfer(ue_index_t ue_index, ue_index_t old_ue_index) = 0;
+  virtual async_task<bool> handle_ue_context_transfer(ue_index_t ue_index, ue_index_t old_ue_index)      = 0;
+  virtual bool             handle_ue_context_transfer_sync(ue_index_t ue_index, ue_index_t old_ue_index) = 0;
 };
 
 /// Interface for entities (e.g. DU processor) that wish to manipulate the context of a UE.
@@ -212,7 +213,8 @@ public:
   /// \brief Transfer and remove UE contexts for an ongoing Reestablishment/Handover.
   /// \param[in] ue_index The new UE index of the UE that sent the Reestablishment Request or is the target UE.
   /// \param[in] old_ue_index The old UE index of the UE that sent the Reestablishment Request or is the source UE.
-  virtual async_task<bool> handle_ue_context_transfer(ue_index_t ue_index, ue_index_t old_ue_index) = 0;
+  virtual async_task<bool> handle_ue_context_transfer(ue_index_t ue_index, ue_index_t old_ue_index)      = 0;
+  virtual bool             handle_ue_context_transfer_sync(ue_index_t ue_index, ue_index_t old_ue_index) = 0;
 };
 
 /// Methods used by CU-CP to transfer the RRC UE context e.g. for RRC Reestablishments
