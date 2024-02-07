@@ -300,6 +300,12 @@ private:
   ngap_ue_context_removal_handler& ngap_handler;
 };
 
+class dummy_ngap_cu_cp_connection_notifier : public ngap_cu_cp_connection_notifier
+{
+  void on_ngap_connection_established() override {}
+  void on_ngap_connection_drop() override {}
+};
+
 class dummy_ngap_cu_cp_paging_notifier : public ngap_cu_cp_du_repository_notifier
 {
 public:
