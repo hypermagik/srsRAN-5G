@@ -24,7 +24,9 @@
 
 #include "lib/ngap/ngap_asn1_packer.h"
 #include "srsran/ngap/ngap.h"
+#include "srsran/support/executors/task_executor.h"
 #include "srsran/support/io/io_broker.h"
+#include "srsran/support/timers.h"
 
 namespace srsran {
 namespace srs_cu_cp {
@@ -46,6 +48,8 @@ struct ngap_gateway_params {
   /// Parameters specific to an SCTP network gateway.
   struct network {
     io_broker&                          broker;
+    timer_manager&                      timers;
+    task_executor&                      exec;
     srsran::sctp_network_gateway_config sctp;
   };
 

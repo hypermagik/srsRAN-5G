@@ -41,7 +41,7 @@ sctp_network_gateway_impl::sctp_network_gateway_impl(sctp_network_gateway_config
 
 bool sctp_network_gateway_impl::set_sockopts()
 {
-  if (not subscripe_to_events()) {
+  if (not subscribe_to_events()) {
     logger.error("Couldn't subscribe to SCTP events");
     return false;
   }
@@ -74,7 +74,7 @@ bool sctp_network_gateway_impl::set_sockopts()
 }
 
 /// \brief Subscribes to various SCTP events to handle accociation and shutdown gracefully.
-bool sctp_network_gateway_impl::subscripe_to_events()
+bool sctp_network_gateway_impl::subscribe_to_events()
 {
   struct sctp_event_subscribe events = {};
   events.sctp_data_io_event          = 1;
@@ -301,7 +301,7 @@ bool sctp_network_gateway_impl::create_and_connect()
   struct addrinfo*                                   result;
   for (result = results; result != nullptr; result = result->ai_next) {
     // Create SCTP socket only if not created in create_and_bind function.
-    if (sock_fd == -1) {
+    if (config.bind_address.empty()) {
       sock_fd = ::socket(result->ai_family, result->ai_socktype, result->ai_protocol);
       if (sock_fd == -1) {
         ret = errno;
@@ -317,11 +317,11 @@ bool sctp_network_gateway_impl::create_and_connect()
         }
         continue;
       }
-    }
 
-    if (not set_sockopts()) {
-      close_socket();
-      continue;
+      if (not set_sockopts()) {
+        close_socket();
+        continue;
+      }
     }
 
     char ip_addr[NI_MAXHOST], port_nr[NI_MAXSERV];
@@ -387,6 +387,9 @@ bool sctp_network_gateway_impl::create_and_connect()
 
 bool sctp_network_gateway_impl::recreate_and_reconnect()
 {
+  // Close previous socket
+  close_socket();
+
   // Recreate socket
   sock_fd = ::socket(server_ai_family, server_ai_socktype, server_ai_protocol);
   if (sock_fd == -1) {
@@ -396,6 +399,7 @@ bool sctp_network_gateway_impl::recreate_and_reconnect()
 
   if (not set_sockopts()) {
     close_socket();
+    return false;
   }
 
   // set socket to non-blocking before reconnecting
@@ -408,6 +412,22 @@ bool sctp_network_gateway_impl::recreate_and_reconnect()
   }
 
   char ip_addr[NI_MAXHOST], port_nr[NI_MAXSERV];
+  getnameinfo((sockaddr*)&client_addr,
+              client_addrlen,
+              ip_addr,
+              NI_MAXHOST,
+              port_nr,
+              NI_MAXSERV,
+              NI_NUMERICHOST | NI_NUMERICSERV);
+  logger.debug("Binding to {} port {}", ip_addr, port_nr);
+
+  // rebind to address/port
+  if (::bind(sock_fd, (sockaddr*)&client_addr, client_addrlen) == -1) {
+    logger.error("Failed to bind to {}:{} - {}", ip_addr, port_nr, strerror(errno));
+    close_socket();
+    return false;
+  }
+
   getnameinfo((sockaddr*)&server_addr,
               server_addrlen,
               ip_addr,
@@ -415,13 +435,7 @@ bool sctp_network_gateway_impl::recreate_and_reconnect()
               port_nr,
               NI_MAXSERV,
               NI_NUMERICHOST | NI_NUMERICSERV);
-
-  // rebind to address/port
-  if (::bind(sock_fd, (sockaddr*)&server_addr, server_addrlen) == -1) {
-    logger.error("Failed to bind to {}:{} - {}", ip_addr, port_nr, strerror(errno));
-    close_socket();
-    return false;
-  }
+  logger.debug("Connecting to {} port {}", ip_addr, port_nr);
 
   // reconnect to address/port
   if (::connect(sock_fd, (sockaddr*)&server_addr, server_addrlen) == -1 && errno != EINPROGRESS) {
@@ -430,6 +444,7 @@ bool sctp_network_gateway_impl::recreate_and_reconnect()
     return false;
   }
 
+  logger.debug("Connection successful");
   return true;
 }
 
