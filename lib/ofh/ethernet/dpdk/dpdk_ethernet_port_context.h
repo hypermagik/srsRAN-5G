@@ -65,6 +65,9 @@ public:
   /// Returns the mbuf memory pool of this context.
   const ::rte_mempool* get_mempool() const { return mem_pool; }
 
+  /// Returns the number of rx queues.
+  unsigned get_nb_rx_queues() const;
+
 private:
   const unsigned       port_id;
   ::rte_mempool* const mem_pool;
