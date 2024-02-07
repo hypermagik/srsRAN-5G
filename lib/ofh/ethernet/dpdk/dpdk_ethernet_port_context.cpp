@@ -55,14 +55,21 @@ static bool port_init(const dpdk_port_config& config, ::rte_mempool* mem_pool, u
     port_conf.txmode.offloads |= RTE_ETH_TX_OFFLOAD_MBUF_FAST_FREE;
   }
 
+  const bool is_memif = std::string(dev_info.driver_name) == "net_memif";
+
+  const unsigned nb_rx_queues = std::min<unsigned>(dev_info.max_rx_queues, is_memif ? 2 : 1);
+  if (nb_rx_queues != 1) {
+    fmt::print("DPDK port {} running with {} rx queues.\n", port_id, nb_rx_queues);
+  }
+
   // Configure the Ethernet device.
-  if (::rte_eth_dev_configure(port_id, 1, 1, &port_conf) != 0) {
+  if (::rte_eth_dev_configure(port_id, nb_rx_queues, 1, &port_conf) != 0) {
     fmt::print("DPDK - Error configuring Ethernet device\n");
     return false;
   }
 
   // Configure MTU size.
-  if (::rte_eth_dev_set_mtu(port_id, config.mtu_size.value()) != 0) {
+  if (!is_memif && ::rte_eth_dev_set_mtu(port_id, config.mtu_size.value()) != 0) {
     uint16_t current_mtu;
     ::rte_eth_dev_get_mtu(port_id, &current_mtu);
     fmt::print("DPDK - Unable to configure MTU size to '{}' bytes, current MTU size is '{}' bytes\n",
@@ -76,10 +83,12 @@ static bool port_init(const dpdk_port_config& config, ::rte_mempool* mem_pool, u
     return false;
   }
 
-  // Allocate and set up 1 RX queue.
-  if (::rte_eth_rx_queue_setup(port_id, 0, nb_rxd, ::rte_eth_dev_socket_id(port_id), nullptr, mem_pool) < 0) {
-    fmt::print("DPDK - Error configuring Rx queue\n");
-    return false;
+  for (unsigned queue_id = 0; queue_id < nb_rx_queues; queue_id++) {
+    // Allocate and set up RX queue.
+    if (::rte_eth_rx_queue_setup(port_id, queue_id, nb_rxd, ::rte_eth_dev_socket_id(port_id), nullptr, mem_pool) < 0) {
+      fmt::print("Error configuring rx queue\n");
+      return false;
+    }
   }
 
   ::rte_eth_txconf txconf = dev_info.default_txconf;
@@ -149,4 +158,16 @@ dpdk_port_context::~dpdk_port_context()
   }
   ::rte_eth_dev_close(port_id);
   fmt::print(" Done\n");
+}
+
+unsigned dpdk_port_context::get_nb_rx_queues() const
+{
+  ::rte_eth_dev_info dev_info;
+
+  int ret = ::rte_eth_dev_info_get(port_id, &dev_info);
+  if (ret == 0) {
+    return dev_info.nb_rx_queues;
+  }
+
+  return 1;
 }

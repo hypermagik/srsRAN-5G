@@ -1,0 +1,25 @@
+xxx 13c803ba7 2024-02-01T17:59:55.. Sorin Popescu      Avoid handover deadlock HEAD -> dev, dev-006-ho
+--- 4d564be10 2024-01-29T16:38:32.. Sorin Popescu      DPDK can now be used with multiple devices and multiple cells origin/dev-006, origin/dev, dev-006
+--- 707378dd7 2023-12-26T15:27:12.. Sorin Popescu      Build bbdev only if PUSCH HW acceleration is enabled
+xxx e6d20afcb 2023-10-29T00:53:44.. Sorin Popescu      Move PUSCH decoder workers to L1 UL affinity bucket
+xxx 566d8a388 2023-10-21T12:32:44.. Sorin Popescu      Add support for DPDK shared memory interface with two rx queues
+--- e3fd03e4f 2023-11-25T18:59:06.. Sorin Popescu      Adjust DPDK buffer size for Mellanox NICs
+--- 89eda6b6b 2023-10-28T09:55:06.. Sorin Popescu      Fix affinities when CPU index does not start from 0
+xxx db663f774 2023-10-21T11:28:38.. Sorin Popescu      Allow running OFH without VLAN tags
+xxx 6691554a2 2023-12-04T20:46:52.. Sorin Popescu      Lower minimum DPDK version
+xxx 9be2a97fd 2023-10-01T21:23:54.. Sorin Popescu      bladeRF: use SSE to interleave and deinterleave channel samples
+xxx ec4429f6e 2023-12-06T17:54:27.. Sorin Popescu      bladeRF: ensure DC offset correction is performed when the sampling rate is set by setting the frequency and re-applying the correction values before setting the sampling rate
+xxx c68017060 2023-10-01T21:32:21.. Sorin Popescu      bladeRF: add support for bladeRF
+xxx 5935162e6 2023-10-13T19:31:19.. Sorin Popescu      Increase backend worker sleep period
+--- ef2749f81 2023-10-15T19:30:49.. Sorin Popescu      Don't clear UL CP messages before filling in Ethernet DL data
+xxx bacc961a5 2023-10-01T21:26:19.. Sorin Popescu      Fix index overflow in vector conversion from 16bit to float
+xxx e26a61b77 2023-09-30T00:48:18.. Sorin Popescu      Apply security settings according to the decision in the CU-UP for bearers created via PDU session modification
+xxx f628ebf8a 2023-09-30T00:47:49.. Sorin Popescu      Avoid crash if UE is no longer available to handle inactivity notification
+xxx fe18bbf44 2023-09-27T12:53:39.. Sorin Popescu      Ignore FMA when checking for CPU supported features, AMD CPUs don't advertise support for it but it's there
+xxx 76f7245dc 2023-12-04T21:30:59.. Sorin Popescu      Increment RETX counter and handle max_retx on RLC AM Tx timeout (partial)
+--- 563162991 2023-09-22T13:36:48.. Sorin Popescu      Avoid double TEID release and bearer disconnect on PDU session removal
+xxx c591287d9 2023-09-08T19:01:03.. Sorin Popescu      When band is set, use configured value instead of deriving it from ARFCN
+xxx ee2a76536 2023-08-01T19:30:53.. Sorin Popescu      Keep trying to connect to the AMF if the SCTP connection drops
+xxx 1753c94bf 2023-08-04T21:22:57.. Sorin Popescu      Don't over-restrict dl-DataToUl-Ack
+xxx fabfc5f16 2023-10-26T18:52:48.. Sorin Popescu      Adjust symbol index for long preamble PRACH before adding to buffer, accounting for start symbol and CP length
+xxx 9a07634de 2023-09-08T17:50:45.. Sorin Popescu      Add .gitignore
