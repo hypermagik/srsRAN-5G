@@ -47,8 +47,9 @@ public:
 class ngap_event_handler
 {
 public:
-  virtual ~ngap_event_handler()         = default;
-  virtual void handle_connection_loss() = 0;
+  virtual ~ngap_event_handler()                = default;
+  virtual void handle_connection_established() = 0;
+  virtual void handle_connection_loss()        = 0;
 };
 
 /// This interface notifies the reception of new NGAP messages over the NGAP interface.
@@ -114,6 +115,19 @@ public:
   /// \brief Notifies the CU-CP about a Handover Request.
   virtual async_task<ngap_handover_resource_allocation_response>
   on_ngap_handover_request(const ngap_handover_request& request) = 0;
+};
+
+/// Interface used by NGAP to inform about events.
+class ngap_cu_cp_connection_notifier
+{
+public:
+  virtual ~ngap_cu_cp_connection_notifier() = default;
+
+  /// \brief Notifies the CU-CP about a successful NGAP connection.
+  virtual void on_ngap_connection_established() = 0;
+
+  /// \brief Notifies the CU-CP about a dropped NGAP connection.
+  virtual void on_ngap_connection_drop() = 0;
 };
 
 /// Handle NGAP NAS Message procedures as defined in TS 38.413 section 8.6.
