@@ -54,6 +54,8 @@ dpdk_receiver_impl::dpdk_receiver_impl(task_executor&                     execut
   port_ctx(*port_ctx_ptr)
 {
   srsran_assert(port_ctx_ptr, "Invalid port context");
+
+  nb_rx_queues = port_ctx.get_nb_rx_queues();
 }
 
 void dpdk_receiver_impl::start(frame_notifier& notifier_)
@@ -98,7 +100,14 @@ void dpdk_receiver_impl::receive_loop()
     return;
   }
 
-  receive();
+  unsigned num_frames = 0;
+  for (unsigned queue_id = 0; queue_id < port_ctx.get_nb_rx_queues(); queue_id++) {
+    num_frames += receive(queue_id);
+  }
+
+  if (num_frames == 0) {
+    std::this_thread::sleep_for(std::chrono::microseconds(5));
+  }
 
   // Retry the task deferring when it fails.
   while (!executor.defer([this]() { receive_loop(); })) {
@@ -106,14 +115,10 @@ void dpdk_receiver_impl::receive_loop()
   }
 }
 
-void dpdk_receiver_impl::receive()
+unsigned dpdk_receiver_impl::receive(uint16_t queue_id)
 {
   std::array<::rte_mbuf*, MAX_BURST_SIZE> mbufs;
-  unsigned num_frames = ::rte_eth_rx_burst(port_ctx.get_port_id(), 0, mbufs.data(), MAX_BURST_SIZE);
-  if (num_frames == 0) {
-    std::this_thread::sleep_for(std::chrono::microseconds(5));
-    return;
-  }
+  unsigned num_frames = ::rte_eth_rx_burst(port_ctx.get_port_id(), queue_id, mbufs.data(), MAX_BURST_SIZE);
 
   for (auto mbuf : span<::rte_mbuf*>(mbufs.data(), num_frames)) {
     std::array<uint8_t, MAX_BUFFER_SIZE> buffer;
@@ -127,4 +132,6 @@ void dpdk_receiver_impl::receive()
 
     notifier.get().on_new_frame(span<const uint8_t>(buffer.data(), length));
   }
+
+  return num_frames;
 }
