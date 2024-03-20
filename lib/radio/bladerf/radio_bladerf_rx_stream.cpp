@@ -284,50 +284,26 @@ baseband_gateway_receiver::metadata radio_bladerf_rx_stream::receive(baseband_ga
 
       // Convert samples.
       if (sample_size == sizeof(int8_t)) {
+        const srsran::span<int8_t> x{buffer + buffer_byte_offset, channel_samples_to_read * 2 * nof_channels};
+
         if (nof_channels == 1) {
-          const srsran::span<int8_t>       x{buffer + buffer_byte_offset, channel_samples_to_read * 2};
           const srsran::span<srsran::cf_t> z = buffs[0].subspan(output_offset, channel_samples_to_read);
           srsran::srsvec::convert(z, x, iq_scale);
         } else {
-          static uint16_t ch0[message_size / 2 / sizeof(uint16_t)];
-          static uint16_t ch1[message_size / 2 / sizeof(uint16_t)];
-
-          auto* x = reinterpret_cast<uint16_t*>(buffer + buffer_byte_offset);
-
-          for (size_t i = 0; i < channel_samples_to_read; i++) {
-            ch0[i] = x[2 * i + 0];
-            ch1[i] = x[2 * i + 1];
-          }
-
-          const srsran::span<const int8_t> x0{reinterpret_cast<const int8_t*>(ch0), channel_samples_to_read * 2};
-          const srsran::span<const int8_t> x1{reinterpret_cast<const int8_t*>(ch1), channel_samples_to_read * 2};
-          const srsran::span<srsran::cf_t> z0 = buffs[0].subspan(output_offset, channel_samples_to_read);
-          const srsran::span<srsran::cf_t> z1 = buffs[1].subspan(output_offset, channel_samples_to_read);
-          srsran::srsvec::convert(z0, x0, iq_scale);
-          srsran::srsvec::convert(z1, x1, iq_scale);
+          const auto& z0 = buffs[0].subspan(output_offset, channel_samples_to_read);
+          const auto& z1 = buffs[1].subspan(output_offset, channel_samples_to_read);
+          srsran::srsvec::convert(z0, z1, x, iq_scale);
         }
       } else {
+        const srsran::span<int16_t> x{reinterpret_cast<int16_t*>(buffer + buffer_byte_offset), channel_samples_to_read * 2 * nof_channels};
+
         if (nof_channels == 1) {
-          const srsran::span<const int16_t> x{reinterpret_cast<const int16_t*>(buffer + buffer_byte_offset), channel_samples_to_read * 2};
-          const srsran::span<srsran::cf_t>  z = buffs[0].subspan(output_offset, channel_samples_to_read);
+          const srsran::span<srsran::cf_t> z = buffs[0].subspan(output_offset, channel_samples_to_read);
           srsran::srsvec::convert(z, x, iq_scale);
         } else {
-          static uint32_t ch0[message_size / 2 / sizeof(uint32_t)];
-          static uint32_t ch1[message_size / 2 / sizeof(uint32_t)];
-
-          auto* x = reinterpret_cast<uint32_t*>(buffer + buffer_byte_offset);
-
-          for (size_t i = 0; i < channel_samples_to_read; i++) {
-            ch0[i] = x[2 * i + 0];
-            ch1[i] = x[2 * i + 1];
-          }
-
-          const srsran::span<const int16_t> x0{reinterpret_cast<const int16_t*>(ch0), channel_samples_to_read * 2};
-          const srsran::span<const int16_t> x1{reinterpret_cast<const int16_t*>(ch1), channel_samples_to_read * 2};
-          const srsran::span<srsran::cf_t>  z0 = buffs[0].subspan(output_offset, channel_samples_to_read);
-          const srsran::span<srsran::cf_t>  z1 = buffs[1].subspan(output_offset, channel_samples_to_read);
-          srsran::srsvec::convert(z0, x0, iq_scale);
-          srsran::srsvec::convert(z1, x1, iq_scale);
+          const auto& z0 = buffs[0].subspan(output_offset, channel_samples_to_read);
+          const auto& z1 = buffs[1].subspan(output_offset, channel_samples_to_read);
+          srsran::srsvec::convert(z0, z1, x, iq_scale);
         }
       }
 
