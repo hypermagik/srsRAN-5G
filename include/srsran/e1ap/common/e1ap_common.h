@@ -40,8 +40,9 @@ public:
 class e1ap_event_handler
 {
 public:
-  virtual ~e1ap_event_handler()         = default;
-  virtual void handle_connection_loss() = 0;
+  virtual ~e1ap_event_handler()                = default;
+  virtual void handle_connection_established() = 0;
+  virtual void handle_connection_loss()        = 0;
 };
 
 /// This interface notifies the reception of new E1AP messages over the E1AP interface.

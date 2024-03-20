@@ -42,6 +42,7 @@ public:
   ngap_impl(ngap_configuration&                ngap_cfg_,
             ngap_cu_cp_ue_creation_notifier&   cu_cp_ue_creation_notifier_,
             ngap_cu_cp_du_repository_notifier& cu_cp_du_repository_notifier_,
+            ngap_cu_cp_connection_notifier&    cu_cp_conn_notifier_,
             ngap_ue_task_scheduler&            task_sched_,
             ngap_ue_manager&                   ue_manager_,
             ngap_message_notifier&             ngap_notifier_,
@@ -59,7 +60,8 @@ public:
 
   // ngap message handler functions
   void handle_message(const ngap_message& msg) override;
-  void handle_connection_loss() override {}
+  void handle_connection_established() override;
+  void handle_connection_loss() override;
 
   // ngap control message handler functions
   async_task<bool> handle_ue_context_release_request(const cu_cp_ue_context_release_request& msg) override;
@@ -151,6 +153,7 @@ private:
 
   ngap_cu_cp_ue_creation_notifier&   cu_cp_ue_creation_notifier;
   ngap_cu_cp_du_repository_notifier& cu_cp_du_repository_notifier;
+  ngap_cu_cp_connection_notifier&    cu_cp_conn_notifier;
   ngap_ue_task_scheduler&            task_sched;
   ngap_ue_manager&                   ue_manager;
   ngap_message_notifier&             ngap_notifier;
