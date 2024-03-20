@@ -38,12 +38,28 @@ namespace srsvec {
 /// \param [out] z resultant data
 void convert(span<int8_t> z, span<const cf_t> x, float scale);
 
+/// \brief Converts and interleaves from complex float to int8 applying the given scaling
+///
+/// \param [in] x0 is the first input data
+/// \param [in] x1 is the second input data
+/// \param [in] scale input data scaling prior conversion
+/// \param [out] z resultant data
+void convert(span<int8_t> z, span<const cf_t> x0, span<const cf_t> x1, float scale);
+
 /// \brief Converts from int8 to complex float applying the given scaling
 ///
 /// \param [in] x is the input data
 /// \param [in] scale input data scaling after conversion
 /// \param [out] z resultant data
 void convert(span<cf_t> z, span<const int8_t> x, float scale);
+
+/// \brief Converts and deinterleaves from int8 to complex float applying the given scaling
+///
+/// \param [in] x is the input data
+/// \param [in] scale input data scaling after conversion
+/// \param [out] z0 first resultant data
+/// \param [out] z1 second resultant data
+void convert(span<cf_t> z0, span<cf_t> z1, span<const int8_t> x, float scale);
 
 /// \brief Converts a sequence of numbers from complex float to int16 applying the given scaling and rounding the result
 /// to the nearest integer.
@@ -53,12 +69,27 @@ void convert(span<cf_t> z, span<const int8_t> x, float scale);
 /// \param [in]  scale   Scaling factor.
 void convert(span<int16_t> z, span<const cf_t> x, float scale);
 
+/// \brief Converts and interleaves from complex float to int16 applying the given scaling
+///
+/// \param [in] x0 is the first input data
+/// \param [in] x1 is the second input data
+/// \param [in] scale input data scaling prior conversion
+/// \param [out] z resultant data
+void convert(span<int16_t> z, span<const cf_t> x0, span<const cf_t> x1, float scale);
+
 /// \brief Converts from int16 to complex float applying the given scaling.
 ///
 /// \param [out] z       Converted sequence.
 /// \param [in]  x       Input sequence.
 /// \param [in]  scale   Scaling factor.
 void convert(span<cf_t> z, span<const int16_t> x, float scale);
+
+/// \brief Converts and deinterleaves from int16 to complex float applying the given scaling
+///
+/// \param [in] x is the input data
+/// \param [in] scale input data scaling after conversion
+/// \param [out] z resultant data
+void convert(span<cf_t> z0, span<cf_t> z1, span<const int16_t> x, float scale);
 
 /// \brief Converts a sequence of numbers from float to int16 applying the given scaling and rounding the result to the
 /// nearest integer.
