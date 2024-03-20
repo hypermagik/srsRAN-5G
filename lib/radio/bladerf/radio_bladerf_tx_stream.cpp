@@ -263,54 +263,29 @@ void radio_bladerf_tx_stream::transmit(const baseband_gateway_buffer_reader&    
     const size_t samples_in_msg           = bytes_to_samples(message_size - message_offset) / nof_channels;
     const size_t channel_samples_to_write = std::min(samples_in_msg, nsamples - input_offset);
 
-    srsran_assert(channel_samples_to_write % 2 == 0, "odd samples");
-
     // Convert samples.
     if (sample_size == sizeof(int8_t)) {
+      const srsran::span<int8_t> z = {buffer + buffer_byte_offset, channel_samples_to_write * 2 * nof_channels};
+
       if (nof_channels == 1) {
-        const srsran::span<int8_t> z = {buffer + buffer_byte_offset, channel_samples_to_write * 2};
-        srsran::srsvec::convert(buffs[0].subspan(input_offset, channel_samples_to_write), iq_scale * 1.5f, z);
+        const auto x = buffs[0].subspan(input_offset, channel_samples_to_write);
+        srsran::srsvec::convert(x, iq_scale * 1.5f, z);
       } else {
-        static uint16_t ch0[message_size / 2 / sizeof(uint16_t)];
-        static uint16_t ch1[message_size / 2 / sizeof(uint16_t)];
-
-        const srsran::span<const srsran::cf_t> x0 = buffs[0].subspan(input_offset, channel_samples_to_write);
-        const srsran::span<const srsran::cf_t> x1 = buffs[1].subspan(input_offset, channel_samples_to_write);
-        srsran::srsvec::convert(x0, iq_scale, {reinterpret_cast<int8_t*>(ch0), channel_samples_to_write * 2});
-        srsran::srsvec::convert(x1, iq_scale, {reinterpret_cast<int8_t*>(ch1), channel_samples_to_write * 2});
-
-        auto* z = reinterpret_cast<uint16_t*>(buffer + buffer_byte_offset);
-
-        // Unrolled two samples for each channel.
-        for (size_t i = 0; i < channel_samples_to_write; i += 2) {
-          z[2 * i + 0] = ch0[i + 0];
-          z[2 * i + 1] = ch1[i + 0];
-          z[2 * i + 2] = ch0[i + 1];
-          z[2 * i + 3] = ch1[i + 1];
-        }
+        const auto x = buffs[0].subspan(input_offset, channel_samples_to_write);
+        const auto y = buffs[1].subspan(input_offset, channel_samples_to_write);
+        srsran::srsvec::convert(x, y, iq_scale * 1.5f, z);
       }
     } else {
+      srsran::span<int16_t> z{reinterpret_cast<int16_t*>(buffer + buffer_byte_offset),
+                              channel_samples_to_write * 2 * nof_channels};
+
       if (nof_channels == 1) {
-        srsran::span<int16_t> z{reinterpret_cast<int16_t*>(buffer + buffer_byte_offset), channel_samples_to_write * 2};
-        srsran::srsvec::convert(buffs[0].subspan(input_offset, channel_samples_to_write), iq_scale, z);
+        const auto x = buffs[0].subspan(input_offset, channel_samples_to_write);
+        srsran::srsvec::convert(x, iq_scale, z);
       } else {
-        static uint32_t ch0[message_size / 2 / sizeof(uint32_t)];
-        static uint32_t ch1[message_size / 2 / sizeof(uint32_t)];
-
-        const srsran::span<const srsran::cf_t> x0 = buffs[0].subspan(input_offset, channel_samples_to_write);
-        const srsran::span<const srsran::cf_t> x1 = buffs[1].subspan(input_offset, channel_samples_to_write);
-        srsran::srsvec::convert(x0, iq_scale, {reinterpret_cast<int16_t*>(ch0), channel_samples_to_write * 2});
-        srsran::srsvec::convert(x1, iq_scale, {reinterpret_cast<int16_t*>(ch1), channel_samples_to_write * 2});
-
-        auto* z = reinterpret_cast<uint32_t*>(buffer + buffer_byte_offset);
-
-        // Unrolled two samples for each channel.
-        for (size_t i = 0; i < channel_samples_to_write; i += 2) {
-          z[2 * i + 0] = ch0[i + 0];
-          z[2 * i + 1] = ch1[i + 0];
-          z[2 * i + 2] = ch0[i + 1];
-          z[2 * i + 3] = ch1[i + 1];
-        }
+        const auto x = buffs[0].subspan(input_offset, channel_samples_to_write);
+        const auto y = buffs[1].subspan(input_offset, channel_samples_to_write);
+        srsran::srsvec::convert(x, y, iq_scale, z);
       }
     }
 
