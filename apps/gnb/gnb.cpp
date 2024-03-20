@@ -346,8 +346,10 @@ int main(int argc, char** argv)
 
     ngap_adapter = srs_cu_cp::create_ngap_gateway(srs_cu_cp::ngap_gateway_params{
         *ngap_p,
-        gnb_cfg.amf_cfg.no_core ? ngap_mode_t{no_core_mode_t{}}
-                                : ngap_mode_t{network_mode_t{*epoll_broker, generate_ngap_nw_config(gnb_cfg)}}});
+        gnb_cfg.amf_cfg.no_core
+            ? ngap_mode_t{no_core_mode_t{}}
+            : ngap_mode_t{
+                  network_mode_t{*epoll_broker, app_timers, *workers.cu_cp_exec, generate_ngap_nw_config(gnb_cfg)}}});
   }
 
   // E2AP configuration.
