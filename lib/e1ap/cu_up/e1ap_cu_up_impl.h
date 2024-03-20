@@ -58,6 +58,7 @@ public:
   void handle_bearer_context_inactivity_notification(const e1ap_bearer_context_inactivity_notification& msg) override;
 
   // e1ap event handler functions
+  void handle_connection_established() override {}
   void handle_connection_loss() override {}
 
   // e1ap_statistics_handler functions
