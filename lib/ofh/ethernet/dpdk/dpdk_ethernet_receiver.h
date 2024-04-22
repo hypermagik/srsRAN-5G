@@ -65,7 +65,7 @@ private:
   void receive_loop();
 
   /// Receives new Ethernet frames from the socket.
-  void receive();
+  unsigned receive(uint16_t queue_id);
 
   srslog::basic_logger&              logger;
   task_executor&                     executor;
@@ -73,6 +73,7 @@ private:
   std::shared_ptr<dpdk_port_context> port_ctx;
   receiver_metrics_collector_impl    metrics_collector;
   std::atomic<receiver_status>       rx_status{receiver_status::running};
+  unsigned                           nb_rx_queues = 1;
 };
 
 } // namespace ether
