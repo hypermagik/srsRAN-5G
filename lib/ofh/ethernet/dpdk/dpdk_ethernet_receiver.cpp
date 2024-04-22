@@ -52,6 +52,8 @@ dpdk_receiver_impl::dpdk_receiver_impl(task_executor&                     execut
   logger(logger_), executor(executor_), notifier(dummy_notifier), port_ctx(std::move(port_ctx_))
 {
   srsran_assert(port_ctx, "Invalid port context");
+
+  nb_rx_queues = port_ctx->get_nb_rx_queues();
 }
 
 void dpdk_receiver_impl::start(frame_notifier& notifier_)
@@ -96,7 +98,15 @@ void dpdk_receiver_impl::receive_loop()
     return;
   }
 
-  receive();
+  unsigned num_frames = 0;
+  for (unsigned queue_id = 0; queue_id < nb_rx_queues; queue_id++) {
+    num_frames += receive(queue_id);
+  }
+
+  if (num_frames == 0) {
+    ofh_tracer << instant_trace_event("ofh_receiver_wait_data", instant_trace_event::cpu_scope::thread);
+    std::this_thread::sleep_for(std::chrono::microseconds(5));
+  }
 
   // Retry the task deferring when it fails.
   while (!executor.defer([this]() { receive_loop(); })) {
@@ -104,16 +114,14 @@ void dpdk_receiver_impl::receive_loop()
   }
 }
 
-void dpdk_receiver_impl::receive()
+unsigned dpdk_receiver_impl::receive(uint16_t queue_id)
 {
   std::array<::rte_mbuf*, MAX_BURST_SIZE> mbufs;
 
   trace_point dpdk_rx_tp = ofh_tracer.now();
-  unsigned    num_frames = ::rte_eth_rx_burst(port_ctx->get_port_id(), 0, mbufs.data(), MAX_BURST_SIZE);
-  if (num_frames == 0) {
-    ofh_tracer << instant_trace_event("ofh_receiver_wait_data", instant_trace_event::cpu_scope::thread);
-    std::this_thread::sleep_for(std::chrono::microseconds(5));
-    return;
+  unsigned    num_frames = ::rte_eth_rx_burst(port_ctx->get_port_id(), queue_id, mbufs.data(), MAX_BURST_SIZE);
+  if (num_frames != 0) {
+    ofh_tracer << trace_event("ofh_dpdk_rx", dpdk_rx_tp);
   }
 
   for (auto* mbuf : span<::rte_mbuf*>(mbufs.data(), num_frames)) {
@@ -121,4 +129,6 @@ void dpdk_receiver_impl::receive()
     notifier.get().on_new_frame(unique_rx_buffer(dpdk_rx_buffer_impl(mbuf)));
   }
   ofh_tracer << trace_event("ofh_dpdk_rx", dpdk_rx_tp);
+
+  return num_frames;
 }
