@@ -41,8 +41,9 @@ public:
 class f1ap_event_handler
 {
 public:
-  virtual ~f1ap_event_handler()         = default;
-  virtual void handle_connection_loss() = 0;
+  virtual ~f1ap_event_handler()                = default;
+  virtual void handle_connection_established() = 0;
+  virtual void handle_connection_loss()        = 0;
 };
 
 /// Notifier interface used to forward F1AP PDUs to either the CU-CP or DU.

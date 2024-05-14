@@ -86,6 +86,7 @@ cu_cp_impl::cu_cp_impl(const cu_cp_configuration& config_) :
   ngap_entity = create_ngap(cfg.ngap_config,
                             ngap_cu_cp_ev_notifier,
                             ngap_cu_cp_ev_notifier,
+                            *this,
                             ngap_task_sched,
                             ue_mng,
                             *cfg.ngap_notifier,
@@ -644,3 +645,16 @@ void cu_cp_impl::on_statistics_report_timer_expired()
                               [this](timer_id_t /*tid*/) { on_statistics_report_timer_expired(); });
   statistics_report_timer.run();
 }
+
+void cu_cp_impl::on_ngap_connection_established() {
+  if (not cfg.cu_cp_executor->execute([this]() {
+        if (amf_is_connected()) {
+          // start AMF connection procedure.
+          controller->amf_connection_handler().connect_to_amf(nullptr);
+        }
+      })) {
+    report_fatal_error("Failed to initiate CU-CP setup.");
+  }
+}
+
+void cu_cp_impl::on_ngap_connection_drop() {}

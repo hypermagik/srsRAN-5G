@@ -48,8 +48,14 @@ ngap_test::ngap_test() : ngap_ue_task_scheduler(timers, ctrl_worker)
   cfg.slice_configurations.push_back(slice_cfg);
   cfg.pdu_session_setup_timeout = std::chrono::seconds(2);
 
-  ngap = create_ngap(
-      cfg, cu_cp_notifier, cu_cp_paging_notifier, ngap_ue_task_scheduler, ue_mng, msg_notifier, ctrl_worker);
+  ngap = create_ngap(cfg,
+                     cu_cp_notifier,
+                     cu_cp_paging_notifier,
+                     cu_cp_connection_notifier,
+                     ngap_ue_task_scheduler,
+                     ue_mng,
+                     msg_notifier,
+                     ctrl_worker);
 
   cu_cp_notifier.connect_ngap(ngap->get_ngap_ue_context_removal_handler());
 }

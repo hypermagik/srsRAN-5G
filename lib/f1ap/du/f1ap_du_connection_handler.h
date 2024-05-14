@@ -50,6 +50,8 @@ public:
   SRSRAN_NODISCARD bool is_connected() const { return connected_flag; }
 
 private:
+  void handle_connection_established() override {}
+
   // Called by the F1-C GW when the F1-C TNL association drops.
   void handle_connection_loss() override;
 

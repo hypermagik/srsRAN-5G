@@ -69,7 +69,7 @@ private:
   void handle_connection_loss();
 
   // socket helpers
-  bool close_socket();
+  bool close_socket() override;
 
   sctp_network_gateway_config            config;
   sctp_network_gateway_control_notifier& ctrl_notifier;

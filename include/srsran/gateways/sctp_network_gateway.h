@@ -39,6 +39,7 @@ struct sctp_network_gateway_config : common_network_gateway_config {
   std::string connect_address;
   int         connect_port = 0;
   int         ppid         = 0; /// the Payload Protocol Identifier
+  bool        keep_trying  = true;
   // SCTP specific options
   optional<int32_t> rto_initial;
   optional<int32_t> rto_min;
@@ -70,6 +71,9 @@ public:
 
   /// \brief Start listening on socket.
   virtual bool listen() = 0;
+
+  /// \brief Close socket.
+  virtual bool close_socket() = 0;
 
   /// \brief Return the port on which the socket is listening.
   ///

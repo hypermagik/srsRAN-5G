@@ -57,6 +57,7 @@ public:
   async_task<e2_setup_response_message> start_initial_e2_setup_routine() override;
 
   /// E2_event_ handler functions.
+  void handle_connection_established() override {}
   void handle_connection_loss() override {}
 
   /// E2 message handler functions.
