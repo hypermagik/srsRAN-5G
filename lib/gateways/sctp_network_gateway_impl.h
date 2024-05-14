@@ -81,7 +81,7 @@ private:
   bool set_receive_timeout(unsigned rx_timeout_sec);
   bool set_reuse_addr();
   bool subscribe_to_events();
-  bool close_socket();
+  bool close_socket() override;
 
   sctp_network_gateway_config            config; /// configuration
   sctp_network_gateway_control_notifier& ctrl_notifier;

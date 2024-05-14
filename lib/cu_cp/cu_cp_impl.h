@@ -48,7 +48,8 @@ namespace srs_cu_cp {
 class cu_cp_impl final : public cu_cp,
                          public cu_cp_impl_interface,
                          public cu_cp_ng_handler,
-                         public cu_cp_command_handler
+                         public cu_cp_command_handler,
+                         public ngap_cu_cp_connection_notifier
 {
 public:
   explicit cu_cp_impl(const cu_cp_configuration& config_);
@@ -126,6 +127,9 @@ public:
   cu_cp_mobility_manager_handler&        get_cu_cp_mobility_manager_handler() override { return *this; }
   cu_cp_ue_removal_handler&              get_cu_cp_ue_removal_handler() override { return *this; }
   cu_cp_ue_context_manipulation_handler& get_cu_cp_ue_context_handler() override { return *this; }
+
+  void on_ngap_connection_established() override;
+  void on_ngap_connection_drop() override;
 
 private:
   // Handling of DU events.

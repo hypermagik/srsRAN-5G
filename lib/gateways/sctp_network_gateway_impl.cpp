@@ -25,6 +25,7 @@
 #include "srsran/support/error_handling.h"
 #include <fcntl.h>
 #include <srsran/support/sockets.h>
+#include <thread>
 #include <utility>
 
 using namespace srsran;
@@ -313,9 +314,9 @@ bool sctp_network_gateway_impl::create_and_connect()
   struct addrinfo*                                   result;
   for (result = results; result != nullptr; result = result->ai_next) {
     // Create SCTP socket only if not created in create_and_bind function.
-    if (not sock_fd.is_open()) {
+    if (config.bind_address.empty()) {
       sock_fd = unique_fd{::socket(result->ai_family, result->ai_socktype, result->ai_protocol)};
-      if (not sock_fd.is_open()) {
+      if (sock_fd.value() == -1) {
         ret = errno;
         if (ret == ESOCKTNOSUPPORT) {
           // probably the sctp kernel module is missing on the system, inform the user and exit here
@@ -342,7 +343,11 @@ bool sctp_network_gateway_impl::create_and_connect()
         result->ai_addr, result->ai_addrlen, ip_addr, NI_MAXHOST, port_nr, NI_MAXSERV, NI_NUMERICHOST | NI_NUMERICSERV);
     logger.debug("Connecting to {} port {}", ip_addr, port_nr);
 
-    if (::connect(sock_fd.value(), result->ai_addr, result->ai_addrlen) == -1) {
+    if (config.keep_trying) {
+      while (::connect(sock_fd.value(), result->ai_addr, result->ai_addrlen) == -1) {
+        std::this_thread::sleep_for(std::chrono::seconds(2));
+      }
+    } else if (::connect(sock_fd.value(), result->ai_addr, result->ai_addrlen) == -1) {
       // connection failed, try next address
       ret = errno;
       logger.debug("Failed to connect to {}:{} - {}", ip_addr, port_nr, strerror(ret));
@@ -400,6 +405,9 @@ bool sctp_network_gateway_impl::create_and_connect()
 
 bool sctp_network_gateway_impl::recreate_and_reconnect()
 {
+  // Close previous socket
+  close_socket();
+
   // Recreate socket
   sock_fd = unique_fd{::socket(server_ai_family, server_ai_socktype, server_ai_protocol)};
   if (not sock_fd.is_open()) {
@@ -409,6 +417,7 @@ bool sctp_network_gateway_impl::recreate_and_reconnect()
 
   if (not set_sockopts()) {
     close_socket();
+    return false;
   }
 
   // set socket to non-blocking before reconnecting
@@ -421,6 +430,22 @@ bool sctp_network_gateway_impl::recreate_and_reconnect()
   }
 
   char ip_addr[NI_MAXHOST], port_nr[NI_MAXSERV];
+  getnameinfo((sockaddr*)&client_addr,
+              client_addrlen,
+              ip_addr,
+              NI_MAXHOST,
+              port_nr,
+              NI_MAXSERV,
+              NI_NUMERICHOST | NI_NUMERICSERV);
+  logger.debug("Binding to {} port {}", ip_addr, port_nr);
+
+  // rebind to address/port
+  if (::bind(sock_fd.value(), (sockaddr*)&client_addr, client_addrlen) == -1) {
+    logger.error("Failed to bind to {}:{} - {}", ip_addr, port_nr, strerror(errno));
+    close_socket();
+    return false;
+  }
+
   getnameinfo((sockaddr*)&server_addr,
               server_addrlen,
               ip_addr,
@@ -428,21 +453,16 @@ bool sctp_network_gateway_impl::recreate_and_reconnect()
               port_nr,
               NI_MAXSERV,
               NI_NUMERICHOST | NI_NUMERICSERV);
-
-  // rebind to address/port
-  if (::bind(sock_fd.value(), (sockaddr*)&server_addr, server_addrlen) == -1) {
-    logger.error("Failed to bind to {}:{} - {}", ip_addr, port_nr, strerror(errno));
-    close_socket();
-    return false;
-  }
+  logger.debug("Connecting to {} port {}", ip_addr, port_nr);
 
   // reconnect to address/port
   if (::connect(sock_fd.value(), (sockaddr*)&server_addr, server_addrlen) == -1 && errno != EINPROGRESS) {
-    logger.error("Failed to connect to {}:{} - {}", ip_addr, port_nr, strerror(errno));
+    logger.debug("Failed to connect to {}:{} - {}", ip_addr, port_nr, strerror(errno));
     close_socket();
     return false;
   }
 
+  logger.debug("Connection successful");
   return true;
 }
 
@@ -539,7 +559,6 @@ void sctp_network_gateway_impl::handle_notification(span<socket_buffer_type> pay
           break;
         case SCTP_CANT_STR_ASSOC:
           state = "CAN'T START ASSOC";
-          ctrl_notifier.on_connection_loss();
           break;
       }
 
