@@ -113,7 +113,8 @@ protected:
     nw_config.non_blocking_mode = true;
     adapter                     = std::make_unique<ngap_network_adapter>(nw_config);
 
-    ngap = create_ngap(cfg, cu_cp_notifier, cu_cp_paging_notifier, ue_mng, *adapter, timers, ctrl_worker);
+    ngap = create_ngap(
+        cfg, cu_cp_notifier, cu_cp_paging_notifier, cu_cp_connection_notifier, ue_mng, *adapter, timers, ctrl_worker);
     adapter->connect_ngap(ngap.get());
   }
 
@@ -125,6 +126,7 @@ protected:
   ue_manager                            ue_mng{ue_config, up_config, timers, ctrl_worker};
   dummy_ngap_cu_cp_notifier             cu_cp_notifier{ue_mng};
   dummy_ngap_cu_cp_paging_notifier      cu_cp_paging_notifier;
+  dummy_ngap_cu_cp_connection_notifier  cu_cp_connection_notifier;
   std::unique_ptr<ngap_network_adapter> adapter;
   std::unique_ptr<ngap_interface>       ngap;
 

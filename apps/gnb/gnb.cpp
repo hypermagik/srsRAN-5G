@@ -334,7 +334,8 @@ int main(int argc, char** argv)
         *ngap_p,
         cu_cp_config.amf_cfg.no_core
             ? ngap_mode_t{no_core_mode_t{}}
-            : ngap_mode_t{network_mode_t{*epoll_broker, generate_ngap_nw_config(cu_cp_config.amf_cfg)}}});
+            : ngap_mode_t{network_mode_t{
+                  *epoll_broker, generate_ngap_nw_config(cu_cp_config.amf_cfg), app_timers, *workers.cu_cp_exec}}});
   }
 
   // E2AP configuration.

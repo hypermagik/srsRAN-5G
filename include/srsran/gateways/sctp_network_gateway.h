@@ -51,6 +51,7 @@ struct sctp_network_connector_config : public sctp_network_gateway_config {
   std::string connection_name;
   std::string connect_address;
   int         connect_port = 0;
+  bool        keep_trying  = true;
 };
 
 /// \brief Interface to inject PDUs into gateway entity.
@@ -75,6 +76,9 @@ public:
 
   /// \brief Start listening on socket.
   virtual bool listen() = 0;
+
+  /// \brief Close socket.
+  virtual bool close_socket() = 0;
 
   /// \brief Return the port on which the socket is listening.
   ///

@@ -170,6 +170,7 @@ TEST_F(sctp_network_gateway_tester, when_socket_not_exists_then_connect_fails)
   config.connect_port      = 0; // attempt to connect to port 0 which should always fail
   config.non_blocking_mode = true;
   config.reuse_addr        = true;
+  config.keep_trying       = false;
   create_client(config);
   ASSERT_FALSE(connect());
 }
@@ -184,6 +185,7 @@ TEST_F(sctp_network_gateway_tester, when_v6_socket_not_exists_then_connect_fails
   config.connect_port      = 0; // attempt to connect to port 0 which should always fail
   config.non_blocking_mode = true;
   config.reuse_addr        = true;
+  config.keep_trying       = false;
   create_client(config);
   ASSERT_FALSE(connect());
 }

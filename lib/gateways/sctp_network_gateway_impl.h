@@ -53,6 +53,10 @@ public:
 
   bool listen() override;
 
+  bool close_socket() override {
+    return sctp_network_gateway_common_impl::close_socket();
+  }
+
   /// \brief Return the port on which the socket is listening.
   std::optional<uint16_t> get_listen_port() override;
 

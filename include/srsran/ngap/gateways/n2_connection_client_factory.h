@@ -24,6 +24,8 @@
 
 #include "srsran/gateways/sctp_network_gateway.h"
 #include "srsran/ngap/gateways/n2_connection_client.h"
+#include "srsran/support/executors/task_executor.h"
+#include "srsran/support/timers.h"
 #include <variant>
 
 namespace srsran {
@@ -42,6 +44,8 @@ struct n2_connection_client_config {
   struct network {
     io_broker&                            broker;
     srsran::sctp_network_connector_config sctp;
+    timer_manager&                        timers;
+    task_executor&                        exec;
   };
 
   /// PCAP writer for the NGAP messages.

@@ -86,7 +86,11 @@ bool sctp_network_gateway_impl::create_and_connect()
       socket = std::move(outcome.value());
     }
 
-    if (not socket.connect(*result->ai_addr, result->ai_addrlen)) {
+    if (config.keep_trying) {
+      while (not socket.connect(*result->ai_addr, result->ai_addrlen)) {
+        std::this_thread::sleep_for(std::chrono::seconds(2));
+      }
+    } else if (not socket.connect(*result->ai_addr, result->ai_addrlen)) {
       // connection failed, try next address
       close_socket();
       continue;
@@ -198,7 +202,6 @@ void sctp_network_gateway_impl::handle_notification(span<socket_buffer_type> pay
           break;
         case SCTP_CANT_STR_ASSOC:
           state = "CAN'T START ASSOC";
-          handle_connection_loss();
           break;
       }
 

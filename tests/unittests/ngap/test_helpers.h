@@ -358,5 +358,11 @@ private:
   uint64_t ue_id = ue_index_to_uint(srs_cu_cp::ue_index_t::min);
 };
 
+class dummy_ngap_cu_cp_connection_notifier : public ngap_cu_cp_connection_notifier
+{
+  void on_ngap_connection_established() override {}
+  void on_ngap_connection_drop() override {}
+};
+
 } // namespace srs_cu_cp
 } // namespace srsran

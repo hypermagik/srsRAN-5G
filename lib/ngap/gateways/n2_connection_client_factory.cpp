@@ -130,14 +130,34 @@ class ngap_sctp_gateway_adapter : public n2_connection_client,
                                   public network_gateway_data_notifier
 {
 public:
-  ngap_sctp_gateway_adapter(io_broker& broker_, const sctp_network_connector_config& sctp_, dlt_pcap& pcap_) :
-    broker(broker_), sctp_cfg(sctp_), pcap_writer(pcap_)
+  ngap_sctp_gateway_adapter(io_broker&                           broker_,
+                            const sctp_network_connector_config& sctp_,
+                            dlt_pcap&                            pcap_,
+                            timer_manager&                       timers,
+                            task_executor&                       exec) :
+    broker(broker_), sctp_cfg(sctp_), pcap_writer(pcap_), reconnect_timer(timers.create_unique_timer(exec))
   {
     // Create SCTP network adapter.
     sctp_gateway = create_sctp_network_gateway(sctp_network_gateway_creation_message{sctp_cfg, *this, *this});
     if (sctp_gateway == nullptr) {
       report_error("Failed to create SCTP gateway.\n");
     }
+
+    reconnect_timer.set(std::chrono::seconds(5), [this](timer_id_t) {
+      int old_fd = sctp_gateway->get_socket_fd();
+      if (old_fd != -1 && not sctp_gateway->close_socket()) {
+        logger.error("NGAP Gateway failed to stop SCTP socket");
+      }
+      if (sctp_gateway->create_and_connect()) {
+        bool success = sctp_gateway->subscribe_to(broker);
+        if (!success) {
+          report_fatal_error("Failed to register N2 (SCTP) network gateway at IO broker. socket_fd={}",
+                             sctp_gateway->get_socket_fd());
+        }
+      } else {
+        reconnect_timer.run();
+      }
+    });
   }
 
   ~ngap_sctp_gateway_adapter() override { disconnect(); }
@@ -191,20 +211,31 @@ public:
 
   void on_connection_established() override
   {
-    srsran_assert(ev_handler != nullptr, "Adapter is disconnected");
-    // TODO: Extend interface for connection reestablishments.
+    fmt::print("Connection to AMF ({}:{}) established\n", sctp_cfg.connect_address, sctp_cfg.connect_port);
+
+    if (ev_handler != nullptr) {
+      ev_handler->handle_connection_established();
+    }
   }
 
   void on_connection_loss() override
   {
-    srsran_assert(ev_handler != nullptr, "Adapter is disconnected");
-    ev_handler->handle_connection_loss();
+    fmt::print("Connection to AMF ({}:{}) lost\n", sctp_cfg.connect_address, sctp_cfg.connect_port);
+
+    if (ev_handler != nullptr) {
+      ev_handler->handle_connection_loss();
+    }
+
+    if (sctp_gateway != nullptr) {
+      reconnect_timer.run();
+    }
   }
 
 private:
   io_broker&                          broker;
   const sctp_network_connector_config sctp_cfg;
   dlt_pcap&                           pcap_writer;
+  unique_timer                        reconnect_timer;
   ngap_message_handler*               msg_handler = nullptr;
   ngap_event_handler*                 ev_handler  = nullptr;
   srslog::basic_logger&               logger      = srslog::fetch_basic_logger("GNB");
@@ -227,5 +258,5 @@ srsran::srs_cu_cp::create_n2_connection_client(const n2_connection_client_config
 
   // Connection to AMF through SCTP.
   const auto& nw_mode = std::get<n2_connection_client_config::network>(params.mode);
-  return std::make_unique<ngap_sctp_gateway_adapter>(nw_mode.broker, nw_mode.sctp, params.pcap);
+  return std::make_unique<ngap_sctp_gateway_adapter>(nw_mode.broker, nw_mode.sctp, params.pcap, nw_mode.timers, nw_mode.exec);
 }
