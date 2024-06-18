@@ -122,6 +122,10 @@ std::unique_ptr<ngap_message_notifier> ngap_connection_handler::connect_to_amf()
   // Start N2 TNL association and get NGAP Tx PDU notifier.
   tx_pdu_notifier = client_handler.handle_cu_cp_connection_request(std::move(rx_notifier));
   if (tx_pdu_notifier == nullptr) {
+    while (not ctrl_exec.defer([this]() { cu_cp_notifier.on_n2_disconnection(); })) {
+      logger.warning("Failed to dispatch handling of N2 Rx path failure. Cause: Task queue is full. Retrying...");
+      std::this_thread::sleep_for(std::chrono::microseconds{10});
+    }
     return nullptr;
   }
 
