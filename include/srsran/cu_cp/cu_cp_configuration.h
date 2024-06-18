@@ -113,6 +113,8 @@ struct cu_cp_configuration {
   metrics_params metrics;
   /// Timers, executors, and other services used by the CU-CP.
   service_params services;
+  /// Keep trying to connect to AMF.
+  bool keep_trying_to_connect_to_amf = true;
 };
 
 } // namespace srs_cu_cp
