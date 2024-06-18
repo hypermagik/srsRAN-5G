@@ -251,6 +251,7 @@ private:
 
   unique_timer statistics_report_timer;
 
+  bool started = false;
   std::atomic<bool> stopped{false};
 
   cu_configurator cu_cp_cfgtr;

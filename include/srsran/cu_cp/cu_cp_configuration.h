@@ -149,6 +149,8 @@ struct cu_cp_configuration {
   pdcp_metrics_notifier* pdcp_metric_notifier = nullptr;
   /// Configuration for testing purposes.
   test_mode_config test_mode_cfg = {};
+  /// Keep trying to connect to AMF.
+  bool keep_trying_to_connect_to_amf = true;
 };
 
 } // namespace srs_cu_cp

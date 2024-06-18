@@ -118,17 +118,30 @@ cu_cp_impl::~cu_cp_impl()
 
 bool cu_cp_impl::start()
 {
-  std::promise<bool> p;
-  std::future<bool>  fut = p.get_future();
+  while (!started) {
+    std::promise<bool> p;
+    std::future<bool>  fut = p.get_future();
 
-  if (not cfg.services.cu_cp_executor->execute([this, &p]() {
-        // start AMF connection procedure.
-        controller->amf_connection_handler().connect_to_amf(&p);
-      })) {
-    report_fatal_error("Failed to initiate CU-CP setup");
+    if (not cfg.services.cu_cp_executor->execute([this, &p]() {
+          // start AMF connection procedure.
+          controller->amf_connection_handler().connect_to_amf(&p);
+        })) {
+      report_fatal_error("Failed to initiate CU-CP setup");
+    }
+
+    // Block waiting for CU-CP setup to complete.
+    started = fut.get();
+
+    if (!cfg.keep_trying_to_connect_to_amf) {
+      break;
+    }
+
+    if (!started) {
+      std::this_thread::sleep_for(std::chrono::milliseconds{500});
+    }
   }
-  // Block waiting for CU-CP setup to complete.
-  return fut.get();
+
+  return started;
 }
 
 void cu_cp_impl::stop()
@@ -678,7 +691,22 @@ cu_cp_impl::handle_trp_information_request(const trp_information_request_t& requ
 
 void cu_cp_impl::handle_n2_disconnection()
 {
-  // TODO
+  if (!started || !cfg.keep_trying_to_connect_to_amf) {
+    return;
+  }
+
+  if (controller->amf_connection_handler().is_amf_connected(amf_index_t::min)) {
+    fmt::print("N2: Disconnected, reconnecting to AMF...\n");
+  }
+
+  std::this_thread::sleep_for(std::chrono::milliseconds{500});
+
+  if (not cfg.services.cu_cp_executor->defer([this]() {
+        // start AMF connection procedure.
+        controller->amf_connection_handler().connect_to_amf(nullptr);
+      })) {
+    report_fatal_error("Failed to initiate CU-CP setup.");
+  }
 }
 
 std::optional<rrc_meas_cfg>
