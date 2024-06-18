@@ -54,6 +54,8 @@ struct cu_cp_configuration {
   unsigned max_nof_cu_ups = 6;
   /// Maximum number of UEs that the CU-CP may accept.
   unsigned max_nof_ues = 8192;
+  /// Keep trying to connect to AMF.
+  bool keep_trying_to_connect_to_amf = true;
 
   ngap_configuration     ngap_config;
   rrc_cfg_t              rrc_config;

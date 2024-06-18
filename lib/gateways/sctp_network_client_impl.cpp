@@ -384,7 +384,7 @@ void sctp_network_client_impl::handle_notification(span<const uint8_t>          
           handle_sctp_shutdown_comp();
           break;
         case SCTP_CANT_STR_ASSOC:
-          handle_connection_close("Can't start association");
+          // handle_connection_close("Can't start association");
           break;
         default:
           break;
