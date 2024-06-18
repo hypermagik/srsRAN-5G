@@ -103,7 +103,8 @@ cu_cp_test_environment::cu_cp_test_environment(cu_cp_test_env_params params_) :
                                            security::ciphering_algorithm::nea1,
                                            security::ciphering_algorithm::nea3};
 
-  cu_cp_cfg.f1ap.json_log_enabled = true;
+  cu_cp_cfg.keep_trying_to_connect_to_amf = false;
+  cu_cp_cfg.f1ap.json_log_enabled         = true;
 
   // > Plugin config
   cu_cp_cfg.plugin.load_plugins    = params.load_plugins;

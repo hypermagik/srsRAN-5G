@@ -158,6 +158,8 @@ struct cu_cp_configuration {
   e2_connection_client* e2_client = nullptr;
   /// E2 CU metrics interface.
   e2_cu_metrics_interface* e2_cu_metric_iface = nullptr;
+  /// Keep trying to connect to AMF.
+  bool keep_trying_to_connect_to_amf = true;
 };
 
 } // namespace srs_cu_cp
