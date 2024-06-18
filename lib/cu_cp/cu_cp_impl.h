@@ -203,6 +203,7 @@ private:
 
   unique_timer statistics_report_timer;
 
+  bool started = false;
   std::atomic<bool> stopped{false};
 };
 

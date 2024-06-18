@@ -95,6 +95,8 @@ bool ngap_impl::update_ue_index(ue_index_t new_ue_index, ue_index_t old_ue_index
 
 bool ngap_impl::handle_amf_tnl_connection_request()
 {
+  tx_pdu_notifier.reset();
+
   std::unique_ptr<ngap_message_notifier> pdu_notifier = conn_handler.connect_to_amf();
   if (pdu_notifier == nullptr) {
     return false;
