@@ -232,15 +232,6 @@ dl_alloc_result ue_cell_grid_allocator::allocate_dl_grant(const ue_pdsch_grant& 
       if (not cell_cfg.is_fully_dl_enabled(pdsch_alloc.slot) and mcs_prbs.n_prbs == 1) {
         mcs_prbs.n_prbs = 2;
       }
-      // [Implementation-defined]
-      // Check whether to allocate all remaining RBs or not. This is done to ensure we allocate only X nof. UEs per slot
-      // and not X+1 nof. UEs. One way is by checking if the emtpy interval is less than 2 times the required RBs. If
-      // so, allocate all remaining RBs. NOTE: This approach won't hold good in case of low traffic scenario.
-      const unsigned twice_grant_crbs_length =
-          rb_helper::find_empty_interval_of_length(used_crbs, mcs_prbs.n_prbs * 2, 0).length();
-      if (twice_grant_crbs_length < (mcs_prbs.n_prbs * 2)) {
-        mcs_prbs.n_prbs = twice_grant_crbs_length;
-      }
       // Limit nof. RBs to allocate to maximum RBs provided in grant.
       if (grant.max_nof_rbs.has_value()) {
         mcs_prbs.n_prbs = std::min(mcs_prbs.n_prbs, grant.max_nof_rbs.value());
@@ -730,15 +721,6 @@ ue_cell_grid_allocator::allocate_ul_grant(const ue_pusch_grant& grant, ran_slice
       const unsigned      min_allocable_prbs = 1U;
       if (mcs_prbs.mcs < min_mcs_for_1_prb and mcs_prbs.n_prbs <= min_allocable_prbs) {
         ++mcs_prbs.n_prbs;
-      }
-      // [Implementation-defined]
-      // Check whether to allocate all remaining RBs or not. This is done to ensure we allocate only X nof. UEs per slot
-      // and not X+1 nof. UEs. One way is by checking if the emtpy interval is less than 2 times the required RBs. If
-      // so, allocate all remaining RBs. NOTE: This approach won't hold good in case of low traffic scenario.
-      const unsigned twice_grant_crbs_length =
-          rb_helper::find_empty_interval_of_length(used_crbs, mcs_prbs.n_prbs * 2, 0).length();
-      if (twice_grant_crbs_length < (mcs_prbs.n_prbs * 2)) {
-        mcs_prbs.n_prbs = twice_grant_crbs_length;
       }
       // Limit nof. RBs to allocate to maximum RBs provided in grant.
       if (grant.max_nof_rbs.has_value()) {
