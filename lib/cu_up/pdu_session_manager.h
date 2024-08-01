@@ -59,11 +59,12 @@ struct pdu_session_setup_result {
 
 // Final result when modifying a PDU session with all DRBs and QoS flow results.
 struct pdu_session_modification_result {
-  bool                          success        = false;                     // True if PDU session could be set up.
-  pdu_session_id_t              pdu_session_id = pdu_session_id_t::invalid; // The PDU session ID.
-  e1ap_cause_t                  cause;                                      // Cause if modification was unsuccessful.
-  std::vector<drb_setup_result> drb_setup_results;
-  std::vector<drb_setup_result> drb_modification_results;
+  bool                             success        = false;                     // True if PDU session could be set up.
+  pdu_session_id_t                 pdu_session_id = pdu_session_id_t::invalid; // The PDU session ID.
+  e1ap_cause_t                     cause; // Cause if modification was unsuccessful.
+  std::optional<security_result_t> security_result;
+  std::vector<drb_setup_result>    drb_setup_results;
+  std::vector<drb_setup_result>    drb_modification_results;
 };
 
 class pdu_session_manager_ctrl
