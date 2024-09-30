@@ -83,8 +83,8 @@ bool radio_bladerf_device::open(const std::string& device_address)
     return false;
   }
 
-  bladerf_set_rfic_rx_fir(device, bladerf_rfic_rxfir::BLADERF_RFIC_RXFIR_BYPASS);
-  bladerf_set_rfic_tx_fir(device, bladerf_rfic_txfir::BLADERF_RFIC_TXFIR_BYPASS);
+  bladerf_set_rfic_rx_fir(device, bladerf_rfic_rxfir::BLADERF_RFIC_RXFIR_DEFAULT);
+  bladerf_set_rfic_tx_fir(device, bladerf_rfic_txfir::BLADERF_RFIC_TXFIR_DEFAULT);
 
   return true;
 }
