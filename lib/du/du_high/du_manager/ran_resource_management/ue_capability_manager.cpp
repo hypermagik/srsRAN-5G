@@ -233,23 +233,13 @@ pdsch_mcs_table ue_capability_manager::select_pdsch_mcs_table(du_cell_index_t ce
 {
   const auto& init_dl_bwp = base_cell_cfg_list[cell_idx].ue_ded_serv_cell_cfg.init_dl_bwp;
 
-  if (init_dl_bwp.pdsch_cfg.has_value()) {
-    pdsch_mcs_table app_mcs_table = init_dl_bwp.pdsch_cfg.value().mcs_table;
-    if (ue_caps.has_value()) {
-      if (app_mcs_table == pdsch_mcs_table::qam256 and ue_caps->pdsch_qam256_supported) {
-        return pdsch_mcs_table::qam256;
-      }
-      if (app_mcs_table == pdsch_mcs_table::qam64LowSe and ue_caps->pdsch_qam64lowse_supported) {
-        return pdsch_mcs_table::qam64LowSe;
-      }
-    } else if (test_cfg.test_ue.has_value() and test_cfg.test_ue->rnti != rnti_t::INVALID_RNTI) {
-      // Has no capabilities but the UE is in test mode.
-      return app_mcs_table;
-    }
+  if (not init_dl_bwp.pdsch_cfg.has_value()) {
+    // No base cell PDSCH config. Default to QAM64.
+    return pdsch_mcs_table::qam64;
   }
-
-  // Default to QAM64 if no base cell PDSCH config of if the UE capabilities are not available.
-  return pdsch_mcs_table::qam64;
+  // TODO: Support dynamic change of the DL MCS table based on the UE capabilities. This requires changes in the
+  //  scheduler.
+  return init_dl_bwp.pdsch_cfg->mcs_table;
 }
 
 pusch_mcs_table ue_capability_manager::select_pusch_mcs_table(du_cell_index_t cell_idx) const
