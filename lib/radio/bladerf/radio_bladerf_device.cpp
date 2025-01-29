@@ -256,6 +256,12 @@ bool radio_bladerf_device::set_rx_rate(unsigned ch, double rate)
   return true;
 }
 
+void radio_bladerf_device::set_fir2()
+{
+    bladerf_set_rfic_rx_fir(device, BLADERF_RFIC_RXFIR_DEC2);
+    bladerf_set_rfic_tx_fir(device, BLADERF_RFIC_TXFIR_INT2);
+}
+
 bool radio_bladerf_device::set_tx_gain(unsigned ch, double gain)
 {
   fmt::print(BLADERF_LOG_PREFIX "Setting channel {} Tx gain to {:.2f} dB...\n", ch, gain);
