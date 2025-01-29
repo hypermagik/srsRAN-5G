@@ -53,6 +53,7 @@ public:
 
   bool set_tx_rate(unsigned ch, double rate);
   bool set_rx_rate(unsigned ch, double rate);
+  void set_fir2();
   bool set_tx_gain(unsigned ch, double gain);
   bool set_rx_gain(unsigned ch, double gain);
   bool set_tx_freq(unsigned ch, const radio_configuration::lo_frequency& config);
