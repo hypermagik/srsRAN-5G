@@ -261,6 +261,10 @@ radio_session_bladerf_impl::radio_session_bladerf_impl(const radio_configuration
     }
   }
 
+  if (radio_config.sampling_rate_hz <= 61.44e6 / 2) {
+    device.set_fir2();
+  }
+
   // Transition to successfully initialized.
   state = states::SUCCESSFUL_INIT;
 }
