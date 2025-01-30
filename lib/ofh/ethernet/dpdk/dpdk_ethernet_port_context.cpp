@@ -213,7 +213,6 @@ dpdk_port_context::~dpdk_port_context()
   if (ret != 0) {
     fmt::print("rte_eth_dev_close: err '{}', port_id '{}'\n", rte_errno, dpdk_port_id);
   }
-  ::rte_mempool_free(mem_pool);
 
   fmt::print(" Done\n");
 }
