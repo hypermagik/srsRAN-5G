@@ -846,16 +846,6 @@ ul_alloc_result ue_cell_grid_allocator::allocate_ul_grant(du_cell_index_t       
       ++mcs_prbs.nof_prbs;
     }
 
-    // [Implementation-defined]
-    // Check whether to allocate all remaining RBs or not. This is done to ensure we allocate only X nof. UEs per slot
-    // and not X+1 nof. UEs. One way is by checking if the emtpy interval is less than 2 times the required RBs. If
-    // so, allocate all remaining RBs. NOTE: This approach won't hold good in case of low traffic scenario.
-    const unsigned twice_grant_crbs_length =
-        rb_helper::find_empty_interval_of_length(used_crbs, mcs_prbs.nof_prbs * 2, 0).length();
-    if (twice_grant_crbs_length < (mcs_prbs.nof_prbs * 2)) {
-      mcs_prbs.nof_prbs = twice_grant_crbs_length;
-    }
-
     // Limit nof. RBs to allocate to maximum RBs provided in grant.
     if (grant.max_nof_rbs.has_value()) {
       mcs_prbs.nof_prbs = std::min(mcs_prbs.nof_prbs, grant.max_nof_rbs.value());
