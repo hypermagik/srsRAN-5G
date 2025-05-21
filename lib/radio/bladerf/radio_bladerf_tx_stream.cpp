@@ -386,6 +386,10 @@ void radio_bladerf_tx_stream::transmit(const baseband_gateway_buffer_reader&    
     counters.transfers_drain_start = t1;
   }
 
+  if (first_timestamp == 0) {
+    first_timestamp = timestamp;
+  }
+
   // Submit filled buffers.
   size_t transfers_submitted = 0;
   for (size_t i = 0; i < buffers_filled; i++) {
@@ -399,16 +403,18 @@ void radio_bladerf_tx_stream::transmit(const baseband_gateway_buffer_reader&    
     }
 
     if (status == BLADERF_ERR_WOULD_BLOCK) {
-      // We're sending faster than the device can receive.
-      radio_notification_handler::event_description event_description = {};
+      if (timestamp - first_timestamp > srate_Hz) {
+        // We're sending faster than the device can receive.
+        radio_notification_handler::event_description event_description = {};
 
-      event_description.stream_id  = stream_id;
-      event_description.channel_id = radio_notification_handler::UNKNOWN_ID;
-      event_description.source     = radio_notification_handler::event_source::TRANSMIT;
-      event_description.type       = radio_notification_handler::event_type::OVERFLOW;
-      event_description.timestamp  = timestamp;
+        event_description.stream_id  = stream_id;
+        event_description.channel_id = radio_notification_handler::UNKNOWN_ID;
+        event_description.source     = radio_notification_handler::event_source::TRANSMIT;
+        event_description.type       = radio_notification_handler::event_type::OVERFLOW;
+        event_description.timestamp  = timestamp;
 
-      notifier.on_radio_rt_event(event_description);
+        notifier.on_radio_rt_event(event_description);
+      }
     } else {
       fmt::print(BLADERF_LOG_PREFIX "bladerf_submit_stream_buffer_nb() error - {}\n", bladerf_strerror(status));
     }
