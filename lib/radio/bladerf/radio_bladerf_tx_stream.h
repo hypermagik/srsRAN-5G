@@ -115,6 +115,8 @@ private:
   size_t meta_size = 0;
   /// Size of receive buffer on device.
   static constexpr size_t device_buffer_bytes = 64 * 1024;
+  /// First Tx timestamp.
+  uint64_t first_timestamp = 0;
   /// Current Tx timestamp.
   uint64_t timestamp = 0;
   /// End of buffers.
