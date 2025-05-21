@@ -47,6 +47,9 @@ public:
 
   // See interface for documentation.
   bool set_rx_gain(unsigned port_id, double gain_dB) override;
+
+  /// Sets the radio session of this controller.
+  void set_radio(radio_session& session) { radio = &session; }
 };
 
 /// Radio Unit carrier frequency offset controller generic implementation.
@@ -88,7 +91,11 @@ public:
   void stop() override;
 
   /// Sets the radio session of this controller.
-  void set_radio(radio_session& session) { radio = &session; }
+  void set_radio(radio_session& session)
+  {
+    radio = &session;
+    gain_controller.set_radio(session);
+  }
 
   /// Set low phy sectors.
   void set_lower_phy_sectors(std::vector<lower_phy_sector*> sectors);
