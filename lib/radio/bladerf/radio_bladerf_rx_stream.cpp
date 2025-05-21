@@ -401,7 +401,7 @@ baseband_gateway_receiver::metadata radio_bladerf_rx_stream::receive(baseband_ga
     }
   }
 
-  if (rx_overflow) {
+  if (rx_overflow && timestamp - init_timestamp > srate_Hz) {
     radio_notification_handler::event_description event = {};
 
     event.stream_id  = stream_id;
