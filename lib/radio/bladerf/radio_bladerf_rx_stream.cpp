@@ -23,6 +23,12 @@
 #include "radio_bladerf_rx_stream.h"
 #include "srsran/srsvec/conversion.h"
 #include "srsran/support/executors/unique_thread.h"
+#include "fmt/base.h"
+#include <emmintrin.h>
+
+#if defined(__AVX2__)
+#include <immintrin.h>
+#endif
 
 using namespace srsran;
 
@@ -39,22 +45,30 @@ radio_bladerf_rx_stream::radio_bladerf_rx_stream(bladerf*                    dev
 {
   srsran_assert(std::isnormal(srate_Hz) && (srate_Hz > 0.0), "Invalid sampling rate {}.", srate_Hz);
   srsran_assert(nof_channels == 1 || nof_channels == 2, "Invalid number of channels {}.", nof_channels);
-  srsran_assert((description.otw_format == radio_configuration::over_the_wire_format::DEFAULT ||
-                 description.otw_format == radio_configuration::over_the_wire_format::SC8 ||
-                 description.otw_format == radio_configuration::over_the_wire_format::SC16),
-                "Invalid over the wire format.");
 
   if (description.otw_format == radio_configuration::over_the_wire_format::SC8) {
-    sample_size = sizeof(int8_t);
+    sample_size = 2;
     iq_scale    = 128.f;
-  } else {
-    sample_size = sizeof(int16_t);
+    meta_size   = 2 * sizeof(uint64_t);
+  } else if (description.otw_format == radio_configuration::over_the_wire_format::SC12) {
+    sample_size = 3;
     iq_scale    = 2048.f;
+    meta_size   = 4 * sizeof(uint64_t);
+  } else {
+    sample_size = 4;
+    iq_scale    = 2048.f;
+    meta_size   = 2 * sizeof(uint64_t);
   }
 
   // Around 10 transfers per 1ms, for more resolution.
   samples_per_buffer = nof_channels * srate_Hz / 1e3 / 10.f;
-  samples_per_buffer = (samples_per_buffer + 1023) & ~1023;
+  if (sample_size == 2) {
+    samples_per_buffer = (samples_per_buffer + 4095) & ~4095;
+  } else if (sample_size == 3) {
+    samples_per_buffer = (samples_per_buffer + 8191) & ~8191;
+  } else {
+    samples_per_buffer = (samples_per_buffer + 2047) & ~2047;
+  }
 
   const char* env_buffer_size = getenv("RX_BUFFER_SIZE");
   if (env_buffer_size != nullptr) {
@@ -78,13 +92,14 @@ radio_bladerf_rx_stream::radio_bladerf_rx_stream(bladerf*                    dev
 
   fmt::print(BLADERF_LOG_PREFIX "Creating Rx stream with {} channels and {}-bit samples at {} MHz...\n",
              nof_channels,
-             sample_size == sizeof(int8_t) ? "8" : "16",
+             4 * sample_size,
              srate_Hz / 1e6);
 
-  samples_per_message             = bytes_to_samples(message_size - meta_size);
-  samples_per_buffer_without_meta = samples_per_buffer - (samples_per_buffer / 1024) * 8;
-  bytes_per_buffer                = samples_to_bytes(samples_per_buffer);
-  us_per_buffer                   = 1000000 * samples_per_buffer_without_meta / nof_channels / srate_Hz;
+  samples_per_message = bytes_to_samples(message_size - meta_size);
+  samples_per_buffer_without_meta =
+      samples_per_buffer - (sample_size == 3 ? 32 : 16 * samples_per_buffer * sample_size / message_size);
+  bytes_per_buffer = samples_to_bytes(samples_per_buffer);
+  us_per_buffer    = 1000000 * samples_per_buffer_without_meta / nof_channels / srate_Hz;
 
   fmt::print(BLADERF_LOG_PREFIX "...{} transfers, {} buffers, {}/{} samples/buffer, {} bytes/buffer, {}us/buffer...\n",
              nof_transfers,
@@ -94,8 +109,16 @@ radio_bladerf_rx_stream::radio_bladerf_rx_stream(bladerf*                    dev
              bytes_per_buffer,
              us_per_buffer);
 
-  const bladerf_format format = sample_size == sizeof(int8_t) ? bladerf_format::BLADERF_FORMAT_SC8_Q7_META
-                                                              : bladerf_format::BLADERF_FORMAT_SC16_Q11_META;
+  bladerf_format format = bladerf_format::BLADERF_FORMAT_SC16_Q11_META;
+  if (sample_size == 2) {
+    format = bladerf_format::BLADERF_FORMAT_SC8_Q7_META;
+  } else if (sample_size == 3) {
+#if defined(LIBBLADERF_API_VERSION) && (LIBBLADERF_API_VERSION >= 0x02060000)
+    format = bladerf_format::BLADERF_FORMAT_SC16_Q11_PACKED_META;
+#else
+    #pragma message "SC12 OTW format requires libbladeRF version >= 2.6.0 with support for BLADERF_FORMAT_SC16_Q11_PACKED_META"
+#endif
+  }
 
   // Configure the device's Rx modules for use with the async interface.
   int status = bladerf_init_stream(
@@ -283,7 +306,7 @@ baseband_gateway_receiver::metadata radio_bladerf_rx_stream::receive(baseband_ga
       t0 = now();
 
       // Convert samples.
-      if (sample_size == sizeof(int8_t)) {
+      if (sample_size == 2) {
         const srsran::span<int8_t> x{buffer + buffer_byte_offset, channel_samples_to_read * 2 * nof_channels};
 
         if (nof_channels == 1) {
@@ -295,8 +318,48 @@ baseband_gateway_receiver::metadata radio_bladerf_rx_stream::receive(baseband_ga
           srsran::srsvec::convert(x, iq_scale, z0, z1);
         }
       } else {
-        const srsran::span<int16_t> x{reinterpret_cast<int16_t*>(buffer + buffer_byte_offset),
-                                      channel_samples_to_read * 2 * nof_channels};
+        srsran::span<int16_t> x;
+
+        if (sample_size == 3) {
+#if defined(__AVX2__)
+          static const uint8_t grouping[32] = {0,  1,  1,  2,  3,  4,  4,  5,  6,  7,  7,  8,  9,  10, 10, 11,
+                                               16, 17, 17, 18, 19, 20, 20, 21, 22, 23, 23, 24, 25, 26, 26, 27};
+          static const __m256i grouping256  = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(grouping));
+#endif
+          size_t n = channel_samples_to_read * nof_channels;
+          expansion_buffer.resize(n * 2 * sizeof(int16_t));
+
+          const auto* src = buffer + buffer_byte_offset;
+          auto*       dst = reinterpret_cast<int16_t*>(expansion_buffer.data());
+
+#if defined(__AVX2__)
+          while (n >= 10) {
+            const auto a = _mm_loadu_si128(reinterpret_cast<const __m128i*>(src));
+            const auto b = _mm_loadu_si128(reinterpret_cast<const __m128i*>(src + 12));
+            auto       v = _mm256_inserti128_si256(_mm256_castsi128_si256(a), b, 1);
+            v            = _mm256_shuffle_epi8(v, grouping256);
+            auto re      = _mm256_slli_epi16(v, 4);
+            re           = _mm256_srai_epi16(re, 4);
+            auto im      = _mm256_srai_epi16(v, 4);
+            v            = _mm256_blend_epi16(re, im, 0b10101010);
+            _mm256_storeu_si256(reinterpret_cast<__m256i*>(dst), v);
+            src += 8 * 3;
+            dst += 8 * 4 / sizeof(int16_t);
+            n -= 8;
+          }
+#endif
+
+          while (n > 0) {
+            *dst++ = static_cast<int16_t>((*reinterpret_cast<const uint16_t*>(src) & 0x0fff) << 4) >> 4;
+            *dst++ = *reinterpret_cast<const int16_t*>(src + 1) >> 4;
+            src += 3;
+            n--;
+          }
+
+          x = {reinterpret_cast<int16_t*>(expansion_buffer.data()), channel_samples_to_read * 2 * nof_channels};
+        } else {
+          x = {reinterpret_cast<int16_t*>(buffer + buffer_byte_offset), channel_samples_to_read * 2 * nof_channels};
+        }
 
         if (nof_channels == 1) {
           const auto& z = buffs[0].subspan(output_offset, channel_samples_to_read);

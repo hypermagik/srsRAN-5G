@@ -24,6 +24,10 @@
 #include "srsran/srsvec/conversion.h"
 #include "srsran/support/executors/unique_thread.h"
 
+#if defined(__AVX2__)
+#include <immintrin.h>
+#endif
+
 using namespace srsran;
 
 radio_bladerf_tx_stream::radio_bladerf_tx_stream(bladerf*                    device_,
@@ -37,22 +41,30 @@ radio_bladerf_tx_stream::radio_bladerf_tx_stream(bladerf*                    dev
 {
   srsran_assert(std::isnormal(srate_Hz) && (srate_Hz > 0.0), "Invalid sampling rate {}.", srate_Hz);
   srsran_assert(nof_channels == 1 || nof_channels == 2, "Invalid number of channels {}.", nof_channels);
-  srsran_assert((description.otw_format == radio_configuration::over_the_wire_format::DEFAULT ||
-                 description.otw_format == radio_configuration::over_the_wire_format::SC8 ||
-                 description.otw_format == radio_configuration::over_the_wire_format::SC16),
-                "Invalid over the wire format.");
 
   if (description.otw_format == radio_configuration::over_the_wire_format::SC8) {
-    sample_size = sizeof(int8_t);
-    iq_scale    = 127.5f;
+    sample_size = 2;
+    iq_scale    = 128.f;
+    meta_size   = 2 * sizeof(uint64_t);
+  } else if (description.otw_format == radio_configuration::over_the_wire_format::SC12) {
+    sample_size = 3;
+    iq_scale    = 2048.f;
+    meta_size   = 4 * sizeof(uint64_t);
   } else {
-    sample_size = sizeof(int16_t);
-    iq_scale    = 2047.5f;
+    sample_size = 4;
+    iq_scale    = 2048.f;
+    meta_size   = 2 * sizeof(uint64_t);
   }
 
   // Around 5 transfers per 1ms.
   samples_per_buffer = nof_channels * srate_Hz / 1e3 / 5.f;
-  samples_per_buffer = (samples_per_buffer + 1023) & ~1023;
+  if (sample_size == 2) {
+    samples_per_buffer = (samples_per_buffer + 4095) & ~4095;
+  } else if (sample_size == 3) {
+    samples_per_buffer = (samples_per_buffer + 8191) & ~8191;
+  } else {
+    samples_per_buffer = (samples_per_buffer + 2047) & ~2047;
+  }
 
   const char* env_buffer_size = getenv("TX_BUFFER_SIZE");
   if (env_buffer_size != nullptr) {
@@ -75,12 +87,13 @@ radio_bladerf_tx_stream::radio_bladerf_tx_stream(bladerf*                    dev
 
   fmt::print(BLADERF_LOG_PREFIX "Creating Tx stream with {} channels and {}-bit samples at {} MHz...\n",
              nof_channels,
-             sample_size == sizeof(int8_t) ? "8" : "16",
+             4 * sample_size,
              srate_Hz / 1e6);
 
-  samples_per_buffer_without_meta = samples_per_buffer - (samples_per_buffer / 1024) * 8;
-  bytes_per_buffer                = samples_to_bytes(samples_per_buffer);
-  us_per_buffer                   = 1000000 * samples_per_buffer_without_meta / nof_channels / srate_Hz;
+  samples_per_buffer_without_meta =
+      samples_per_buffer - (sample_size == 3 ? 32 : 16 * samples_per_buffer * sample_size / message_size);
+  bytes_per_buffer = samples_to_bytes(samples_per_buffer);
+  us_per_buffer    = 1000000 * samples_per_buffer_without_meta / nof_channels / srate_Hz;
 
   const size_t flush_samples = nof_transfers * samples_per_buffer_without_meta + bytes_to_samples(device_buffer_bytes);
   flush_duration             = 1000000 * flush_samples / nof_channels / srate_Hz;
@@ -95,8 +108,16 @@ radio_bladerf_tx_stream::radio_bladerf_tx_stream(bladerf*                    dev
              us_per_buffer,
              flush_duration);
 
-  const bladerf_format format = sample_size == sizeof(int8_t) ? bladerf_format::BLADERF_FORMAT_SC8_Q7_META
-                                                              : bladerf_format::BLADERF_FORMAT_SC16_Q11_META;
+  bladerf_format format = bladerf_format::BLADERF_FORMAT_SC16_Q11_META;
+  if (sample_size == 2) {
+    format = bladerf_format::BLADERF_FORMAT_SC8_Q7_META;
+  } else if (sample_size == 3) {
+#if defined(LIBBLADERF_API_VERSION) && (LIBBLADERF_API_VERSION >= 0x02060000)
+    format = bladerf_format::BLADERF_FORMAT_SC16_Q11_PACKED_META;
+#else
+    #pragma message "SC12 OTW format requires libbladeRF version >= 2.6.0 with support for BLADERF_FORMAT_SC16_Q11_PACKED_META"
+#endif
+  }
 
   // Configure the device's Tx modules for use with the async interface.
   int status = bladerf_init_stream(
@@ -263,7 +284,7 @@ void radio_bladerf_tx_stream::transmit(const baseband_gateway_buffer_reader&    
     const size_t channel_samples_to_write = std::min(samples_in_msg, nsamples - input_offset);
 
     // Convert samples.
-    if (sample_size == sizeof(int8_t)) {
+    if (sample_size == 2) {
       const srsran::span<int8_t> z = {buffer + buffer_byte_offset, channel_samples_to_write * 2 * nof_channels};
 
       if (nof_channels == 1) {
@@ -275,8 +296,14 @@ void radio_bladerf_tx_stream::transmit(const baseband_gateway_buffer_reader&    
         srsran::srsvec::convert(x, y, iq_scale * 1.5f, z);
       }
     } else {
-      srsran::span<int16_t> z{reinterpret_cast<int16_t*>(buffer + buffer_byte_offset),
-                              channel_samples_to_write * 2 * nof_channels};
+      srsran::span<int16_t> z;
+
+      if (sample_size == 3) {
+        compaction_buffer.resize(channel_samples_to_write * 2 * nof_channels * sizeof(int16_t));
+        z = {reinterpret_cast<int16_t*>(compaction_buffer.data()), channel_samples_to_write * 2 * nof_channels};
+      } else {
+        z = {reinterpret_cast<int16_t*>(buffer + buffer_byte_offset), channel_samples_to_write * 2 * nof_channels};
+      }
 
       if (nof_channels == 1) {
         const auto x = buffs[0].subspan(input_offset, channel_samples_to_write);
@@ -285,6 +312,57 @@ void radio_bladerf_tx_stream::transmit(const baseband_gateway_buffer_reader&    
         const auto x = buffs[0].subspan(input_offset, channel_samples_to_write);
         const auto y = buffs[1].subspan(input_offset, channel_samples_to_write);
         srsran::srsvec::convert(x, y, iq_scale, z);
+      }
+
+      if (sample_size == 3) {
+#if defined(__AVX2__)
+        static const int8_t  grouping_re[32] = {0,  1,  2,  4,  5,  6,  8,  9,  10, 12, 13, 14, -1, -1, -1, -1,
+                                                16, 17, 18, 20, 21, 22, 24, 25, 26, 28, 29, 30, -1, -1, -1, -1};
+        static const __m256i grouping_re256  = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(grouping_re));
+        static const uint8_t mask_re[32]     = {0xff, 0x0f, 0x00, 0x00, 0xff, 0x0f, 0x00, 0x00, 0xff, 0x0f, 0x00,
+                                                0x00, 0xff, 0x0f, 0x00, 0x00, 0xff, 0x0f, 0x00, 0x00, 0xff, 0x0f,
+                                                0x00, 0x00, 0xff, 0x0f, 0x00, 0x00, 0xff, 0x0f, 0x00, 0x00};
+        static const __m256i mask_re256      = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(mask_re));
+        static const int8_t  grouping_im[32] = {1,  2,  3,  5,  6,  7,  9,  10, 11, 13, 14, 15, -1, -1, -1, -1,
+                                                17, 18, 19, 21, 22, 23, 25, 26, 27, 29, 30, 31, -1, -1, -1, -1};
+        static const __m256i grouping_im256  = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(grouping_im));
+        static const uint8_t mask_im[32]     = {0x00, 0x00, 0xff, 0xff, 0x00, 0x00, 0xff, 0xff, 0x00, 0x00, 0xff,
+                                                0xff, 0x00, 0x00, 0xff, 0xff, 0x00, 0x00, 0xff, 0xff, 0x00, 0x00,
+                                                0xff, 0xff, 0x00, 0x00, 0xff, 0xff, 0x00, 0x00, 0xff, 0xff};
+        static const __m256i mask_im256      = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(mask_im));
+#endif
+        size_t n = channel_samples_to_write * nof_channels;
+
+        const auto* src = compaction_buffer.data();
+        auto*       dst = reinterpret_cast<int8_t*>(buffer + buffer_byte_offset);
+
+#if defined(__AVX2__)
+        while (n > 16) {
+          auto v  = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(src));
+          auto re = _mm256_and_si256(v, mask_re256);
+          re      = _mm256_shuffle_epi8(re, grouping_re256);
+          auto im = _mm256_and_si256(v, mask_im256);
+          im      = _mm256_slli_epi16(im, 4);
+          im      = _mm256_shuffle_epi8(im, grouping_im256);
+          v       = _mm256_or_si256(re, im);
+          _mm_storeu_si128(reinterpret_cast<__m128i*>(dst), _mm256_extracti128_si256(v, 0));
+          _mm_storeu_si128(reinterpret_cast<__m128i*>(dst + 12), _mm256_extracti128_si256(v, 1));
+          src += 8 * 4 / sizeof(int16_t);
+          dst += 8 * 3;
+          n -= 8;
+          break;
+        }
+#endif
+
+        while (n > 0) {
+          int16_t re = *src++;
+          int16_t im = *src++;
+          dst[0]     = re & 0xFF;
+          dst[1]     = ((re >> 8) & 0xF) | (im & 0x0F) << 4;
+          dst[2]     = im >> 4;
+          dst += 3;
+          n--;
+        }
       }
     }
 
@@ -327,7 +405,7 @@ void radio_bladerf_tx_stream::transmit(const baseband_gateway_buffer_reader&    
       event_description.stream_id  = stream_id;
       event_description.channel_id = radio_notification_handler::UNKNOWN_ID;
       event_description.source     = radio_notification_handler::event_source::TRANSMIT;
-      event_description.type       = radio_notification_handler::event_type::LATE;
+      event_description.type       = radio_notification_handler::event_type::OVERFLOW;
       event_description.timestamp  = timestamp;
 
       notifier.on_radio_rt_event(event_description);

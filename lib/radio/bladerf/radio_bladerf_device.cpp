@@ -244,7 +244,7 @@ bool radio_bladerf_device::set_rx_rate(unsigned ch, double rate)
   bladerf_bandwidth rf_actual_bw;
 
   status =
-      bladerf_set_bandwidth(device, BLADERF_CHANNEL_RX(ch), static_cast<bladerf_bandwidth>(rate * 0.8), &rf_actual_bw);
+      bladerf_set_bandwidth(device, BLADERF_CHANNEL_RX(ch), static_cast<bladerf_bandwidth>(rate), &rf_actual_bw);
   if (status != 0) {
     on_error("bladerf_set_bandwidth() failed - {}", bladerf_strerror(status));
     return false;
