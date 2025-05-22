@@ -21,6 +21,7 @@
  */
 
 #include "radio_bladerf_impl.h"
+#include <libbladeRF.h>
 
 using namespace srsran;
 
@@ -151,6 +152,14 @@ radio_session_bladerf_impl::radio_session_bladerf_impl(const radio_configuration
                                                        radio_notification_handler&       notifier_) :
   notifier(notifier_)
 {
+  struct bladerf_version version;
+  bladerf_version(&version);
+
+  if (version.major != 2 || version.minor != 6) {
+    fmt::print("Need libbladeRF version 2.6, found {}.{}.{}\n", version.major, version.minor, version.patch);
+    return;
+  }
+
   // Open device.
   if (!device.open(radio_config.args)) {
     fmt::print("Failed to open device with address '{}': {}\n", radio_config.args, device.get_error_message());

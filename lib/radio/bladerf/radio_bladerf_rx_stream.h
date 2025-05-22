@@ -82,15 +82,17 @@ private:
   size_t us_per_buffer;
   size_t buffer_index       = 0;
   size_t buffer_byte_offset = 0;
+  /// Intermediate sample buffer.
+  std::vector<uint8_t> expansion_buffer;
   /// Synchronization.
   std::mutex              mutex;
   std::condition_variable condition;
   /// USB3 message size.
-  static constexpr size_t message_size = 2048;
+  static constexpr size_t message_size = 8192;
   /// Number of samples per message, without metadata.
   size_t samples_per_message;
   /// Metadata size.
-  static constexpr size_t meta_size = 2 * sizeof(uint64_t);
+  size_t meta_size = 0;
   /// Current Rx timestamp.
   uint64_t timestamp = 0;
   /// Starting timestamp.
@@ -110,12 +112,12 @@ private:
   /// @brief Convert samples to bytes, according to otw format.
   /// @param[in] samples Number of samples to convert.
   /// @return Number of bytes.
-  size_t samples_to_bytes(size_t samples) const { return samples * 2 * sample_size; }
+  size_t samples_to_bytes(size_t samples) const { return samples * sample_size; }
 
   /// @brief Convert bytes to samples, according to otw format.
   /// @param[in] bytes Number of bytes to convert.
   /// @return Number of samples.
-  size_t bytes_to_samples(size_t bytes) const { return bytes / 2 / sample_size; }
+  size_t bytes_to_samples(size_t bytes) const { return bytes / sample_size; }
 
   /// @brief Extract timestamp from message metadata.
   /// @param message The message.

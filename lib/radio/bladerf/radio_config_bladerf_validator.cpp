@@ -103,21 +103,6 @@ static bool validate_sampling_rate(double sampling_rate)
   return true;
 }
 
-static bool validate_otw_format(radio_configuration::over_the_wire_format otw_format)
-{
-  static const std::set<radio_configuration::over_the_wire_format> valid_otw_formats = {
-      radio_configuration::over_the_wire_format::DEFAULT,
-      radio_configuration::over_the_wire_format::SC8,
-      radio_configuration::over_the_wire_format::SC16};
-
-  if (valid_otw_formats.count(otw_format) == 0) {
-    fmt::print("The selected over the wire format is not supported.\n");
-    return false;
-  }
-
-  return true;
-}
-
 bool radio_config_bladerf_config_validator::is_configuration_valid(const radio_configuration::radio& config) const
 {
   if (!validate_clock_sources(config.clock)) {
@@ -146,13 +131,5 @@ bool radio_config_bladerf_config_validator::is_configuration_valid(const radio_c
     }
   }
 
-  if (!validate_sampling_rate(config.sampling_rate_hz)) {
-    return false;
-  }
-
-  if (!validate_otw_format(config.otw_format)) {
-    return false;
-  }
-
-  return true;
+  return validate_sampling_rate(config.sampling_rate_hz);
 }
