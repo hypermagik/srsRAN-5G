@@ -21,8 +21,9 @@
  */
 
 #include "radio_config_bladerf_validator.h"
-#include "fmt/format.h"
 #include "srsran/srslog/srslog.h"
+#include "fmt/format.h"
+#include <libbladeRF.h>
 #include <regex>
 #include <set>
 
@@ -105,14 +106,15 @@ static bool validate_sampling_rate(double sampling_rate)
 
 static bool validate_otw_format(radio_configuration::over_the_wire_format otw_format)
 {
-  static const std::set<radio_configuration::over_the_wire_format> valid_otw_formats = {
-      radio_configuration::over_the_wire_format::DEFAULT,
-      radio_configuration::over_the_wire_format::SC8,
-      radio_configuration::over_the_wire_format::SC16};
+  if (otw_format == radio_configuration::over_the_wire_format::SC12) {
+    struct bladerf_version version;
+    bladerf_version(&version);
 
-  if (valid_otw_formats.count(otw_format) == 0) {
-    fmt::print("The selected over the wire format is not supported.\n");
-    return false;
+    if (version.major < 2 || version.minor < 6) {
+      fmt::print(
+          "SC12 OTW format requires libbladeRF version >= 2.6.0 with support for BLADERF_FORMAT_SC16_Q11_PACKED_META");
+      return false;
+    }
   }
 
   return true;

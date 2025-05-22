@@ -107,10 +107,12 @@ private:
   size_t us_per_buffer;
   size_t buffer_index       = 0;
   size_t buffer_byte_offset = 0;
+  /// Intermediate sample buffer.
+  std::vector<int16_t> compaction_buffer;
   /// USB3 message size.
-  static constexpr size_t message_size = 2048;
+  static constexpr size_t message_size = 8192;
   /// Metadata size.
-  static constexpr size_t meta_size = 2 * sizeof(uint64_t);
+  size_t meta_size = 0;
   /// Size of receive buffer on device.
   static constexpr size_t device_buffer_bytes = 64 * 1024;
   /// Current Tx timestamp.
@@ -123,12 +125,12 @@ private:
   /// @brief Convert samples to bytes, according to otw format.
   /// @param[in] samples Number of samples to convert.
   /// @return Number of bytes.
-  size_t samples_to_bytes(size_t samples) const { return samples * 2 * sample_size; }
+  size_t samples_to_bytes(size_t samples) const { return samples * sample_size; }
 
   /// @brief Convert bytes to samples, according to otw format.
   /// @param[in] bytes Number of bytes to convert.
   /// @return Number of samples.
-  size_t bytes_to_samples(size_t bytes) const { return bytes / 2 / sample_size; }
+  size_t bytes_to_samples(size_t bytes) const { return bytes / sample_size; }
 
   /// @brief Set timestamp in message metadata.
   /// @param message The message.
@@ -235,7 +237,8 @@ public:
   unsigned get_buffer_size() const;
 
   // See interface for documentation.
-  void transmit(const baseband_gateway_buffer_reader& data, const baseband_gateway_transmitter_metadata& metadata) override;
+  void transmit(const baseband_gateway_buffer_reader&        data,
+                const baseband_gateway_transmitter_metadata& metadata) override;
 
   /// Stop the transmission.
   void stop();
