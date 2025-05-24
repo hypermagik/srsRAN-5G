@@ -97,6 +97,8 @@ private:
   uint64_t timestamp = 0;
   /// Starting timestamp.
   uint64_t init_timestamp = 0;
+  /// Dump file descriptor.
+  FILE *dump_fd = nullptr;
 
   /// Wait for a buffer to become available.
   void wait_for_buffer()
