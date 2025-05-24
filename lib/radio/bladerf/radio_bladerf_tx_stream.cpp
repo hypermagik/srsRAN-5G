@@ -127,6 +127,12 @@ radio_bladerf_tx_stream::radio_bladerf_tx_stream(bladerf*                    dev
     return;
   }
 
+  const char* env_dump_tx = getenv("DUMP_TX");
+  if (env_dump_tx != nullptr && atoi(env_dump_tx) != 0) {
+    dump_fd = fopen("bladerf-tx.bin", "wb");
+    fmt::print(BLADERF_LOG_PREFIX "Dumping Tx samples to bladerf-tx.bin...\n");
+  }
+
   // Disable libusb event handling on this stream and let the Rx thread do all the handling.
   status = bladerf_enable_feature(device, bladerf_feature::BLADERF_FEATURE_RX_ALL_EVENTS, true);
   if (status != 0) {
@@ -295,6 +301,10 @@ void radio_bladerf_tx_stream::transmit(const baseband_gateway_buffer_reader&    
         const auto y = buffs[1].subspan(input_offset, channel_samples_to_write);
         srsran::srsvec::convert(x, y, iq_scale * 1.5f, z);
       }
+
+      if (dump_fd != nullptr) {
+        fwrite(z.data(), sizeof(int8_t), z.size(), dump_fd);
+      }
     } else {
       srsran::span<int16_t> z;
 
@@ -312,6 +322,10 @@ void radio_bladerf_tx_stream::transmit(const baseband_gateway_buffer_reader&    
         const auto x = buffs[0].subspan(input_offset, channel_samples_to_write);
         const auto y = buffs[1].subspan(input_offset, channel_samples_to_write);
         srsran::srsvec::convert(x, y, iq_scale, z);
+      }
+
+      if (dump_fd != nullptr) {
+        fwrite(z.data(), sizeof(int16_t), z.size(), dump_fd);
       }
 
       if (sample_size == 3) {
@@ -487,6 +501,11 @@ void radio_bladerf_tx_stream::stop()
     if (status != 0) {
       on_error("bladerf_enable_module(BLADERF_CHANNEL_TX({}), false) failed - {}", channel, bladerf_strerror(status));
     }
+  }
+
+  if (dump_fd != nullptr) {
+    fclose(dump_fd);
+    dump_fd = nullptr;
   }
 }
 

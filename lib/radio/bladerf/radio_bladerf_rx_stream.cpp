@@ -128,6 +128,12 @@ radio_bladerf_rx_stream::radio_bladerf_rx_stream(bladerf*                    dev
     return;
   }
 
+  const char* env_dump_rx = getenv("DUMP_RX");
+  if (env_dump_rx != nullptr && atoi(env_dump_rx) != 0) {
+    dump_fd = fopen("bladerf-rx.bin", "wb");
+    fmt::print(BLADERF_LOG_PREFIX "Dumping Rx samples to bladerf-rx.bin...\n");
+  }
+
   state = states::SUCCESSFUL_INIT;
 }
 
@@ -309,6 +315,10 @@ baseband_gateway_receiver::metadata radio_bladerf_rx_stream::receive(baseband_ga
       if (sample_size == 2) {
         const srsran::span<int8_t> x{buffer + buffer_byte_offset, channel_samples_to_read * 2 * nof_channels};
 
+        if (dump_fd != nullptr) {
+          fwrite(x.data(), sizeof(int8_t), x.size(), dump_fd);
+        }
+
         if (nof_channels == 1) {
           const auto& z = buffs[0].subspan(output_offset, channel_samples_to_read);
           srsran::srsvec::convert(x, iq_scale, z);
@@ -359,6 +369,10 @@ baseband_gateway_receiver::metadata radio_bladerf_rx_stream::receive(baseband_ga
           x = {reinterpret_cast<int16_t*>(expansion_buffer.data()), channel_samples_to_read * 2 * nof_channels};
         } else {
           x = {reinterpret_cast<int16_t*>(buffer + buffer_byte_offset), channel_samples_to_read * 2 * nof_channels};
+        }
+
+        if (dump_fd != nullptr) {
+          fwrite(x.data(), sizeof(int16_t), x.size(), dump_fd);
         }
 
         if (nof_channels == 1) {
@@ -485,6 +499,11 @@ void radio_bladerf_rx_stream::stop()
     if (status != 0) {
       on_error("bladerf_enable_module(BLADERF_CHANNEL_RX{}, false) failed - {}", channel, bladerf_strerror(status));
     }
+  }
+
+  if (dump_fd != nullptr) {
+    fclose(dump_fd);
+    dump_fd = nullptr;
   }
 }
 

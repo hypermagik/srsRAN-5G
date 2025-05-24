@@ -123,6 +123,8 @@ private:
   uint64_t eob = 0;
   /// Time required to flush buffers.
   uint64_t flush_duration;
+  /// Dump file descriptor.
+  FILE *dump_fd = nullptr;
 
   /// @brief Convert samples to bytes, according to otw format.
   /// @param[in] samples Number of samples to convert.
