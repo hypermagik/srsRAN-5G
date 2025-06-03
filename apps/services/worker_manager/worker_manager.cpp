@@ -585,8 +585,7 @@ worker_manager::create_du_crit_path_prio_executors(unsigned                     
     // As the PUSCH decoding is not time-critical, assign CPUs dedicated for low priority.
     std::vector<os_sched_affinity_bitmask> pusch_decoder_cpu_masks;
     for (unsigned w = 0; w != nof_pusch_decoder_workers; ++w) {
-      pusch_decoder_cpu_masks.push_back(
-          low_prio_affinity_mng.calcute_affinity_mask(sched_affinity_mask_types::low_priority));
+      pusch_decoder_cpu_masks.push_back(affinity_mng[cell_id].calcute_affinity_mask(sched_affinity_mask_types::l1_ul));
     }
 
     // Instantiate dedicated worker pool for the dedicated upper physical layer PUSCH decoding. This worker pool
