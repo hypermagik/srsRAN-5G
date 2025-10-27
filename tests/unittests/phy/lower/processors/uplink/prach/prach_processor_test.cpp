@@ -34,7 +34,6 @@
 #include "srsran/phy/support/prach_buffer.h"
 #include "srsran/phy/support/prach_buffer_context.h"
 #include "srsran/ran/prach/prach_preamble_information.h"
-#include "srsran/srsvec/conversion.h"
 #include <fmt/ostream.h>
 #include <gtest/gtest.h>
 #include <numeric>
@@ -490,7 +489,7 @@ TEST_P(PrachProcessorFixture, SingleBasebandSymbols)
   // Generate more samples than needed.
   baseband_gateway_buffer_dynamic samples(context.ports.front() + 1, prach_window_length * 2);
   {
-    span<ci16_t> samples2 = samples[context.ports.front()];
+    span<cf_t> samples2 = samples[context.ports.front()];
     std::iota(samples2.begin(), samples2.end(), 0);
   }
 
@@ -516,10 +515,6 @@ TEST_P(PrachProcessorFixture, SingleBasebandSymbols)
   // Verify the OFDM PRACH demodulator.
   ASSERT_EQ(1, ofdm_prach_factory_spy->get_nof_total_demodulate_entries());
 
-  std::vector<cf_t> cf_buffer(prach_window_length);
-  srsvec::convert(
-      cf_buffer, samples.get_reader().get_channel_buffer(context.ports.front()).first(prach_window_length), INT16_MAX);
-
   // Verify demodulation entry.
   const auto demodulate_entry = ofdm_prach_factory_spy->get_total_demodulate_entries().back();
   ASSERT_EQ(demodulate_entry.buffer, &buffer);
@@ -528,7 +523,8 @@ TEST_P(PrachProcessorFixture, SingleBasebandSymbols)
   ASSERT_EQ(demodulate_entry.config.format, context.format);
   ASSERT_EQ(demodulate_entry.config.rb_offset, context.rb_offset);
   ASSERT_EQ(demodulate_entry.config.nof_prb_ul_grid, context.nof_prb_ul_grid);
-  ASSERT_EQ(span<const cf_t>(demodulate_entry.input), cf_buffer);
+  ASSERT_EQ(span<const cf_t>(demodulate_entry.input),
+            samples.get_reader().get_channel_buffer(context.ports.front()).first(prach_window_length));
 
   // Verify the received PRACH window has been processed.
   ASSERT_EQ(1, notifier_spy.get_nof_notifications());
@@ -584,7 +580,7 @@ TEST_P(PrachProcessorFixture, ThreeBasebandSymbols)
   // Generate more samples than needed.
   baseband_gateway_buffer_dynamic samples(context.ports.front() + 1, prach_window_length * 2);
   {
-    span<ci16_t> samples2 = samples[context.ports.front()];
+    span<cf_t> samples2 = samples[context.ports.front()];
     std::iota(samples2.begin(), samples2.end(), 0);
   }
 
@@ -658,10 +654,6 @@ TEST_P(PrachProcessorFixture, ThreeBasebandSymbols)
   // Verify the OFDM PRACH demodulator.
   ASSERT_EQ(1, ofdm_prach_factory_spy->get_nof_total_demodulate_entries());
 
-  std::vector<cf_t> cf_buffer(prach_window_length);
-  srsvec::convert(
-      cf_buffer, samples.get_reader().get_channel_buffer(context.ports.front()).first(prach_window_length), INT16_MAX);
-
   // Verify demodulation entry.
   const auto demodulate_entry = ofdm_prach_factory_spy->get_total_demodulate_entries().back();
   ASSERT_EQ(demodulate_entry.buffer, &buffer);
@@ -670,7 +662,8 @@ TEST_P(PrachProcessorFixture, ThreeBasebandSymbols)
   ASSERT_EQ(demodulate_entry.config.format, context.format);
   ASSERT_EQ(demodulate_entry.config.rb_offset, context.rb_offset);
   ASSERT_EQ(demodulate_entry.config.nof_prb_ul_grid, context.nof_prb_ul_grid);
-  ASSERT_EQ(demodulate_entry.input, cf_buffer);
+  ASSERT_EQ(span<const cf_t>(demodulate_entry.input),
+            samples.get_reader().get_channel_buffer(context.ports.front()).first(prach_window_length));
 
   // Verify the received PRACH window has been processed.
   ASSERT_EQ(1, notifier_spy.get_nof_notifications());
